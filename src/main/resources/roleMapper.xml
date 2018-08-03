@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yyl.RoleMapper">
+    <!-- 使用自定义typeHandler,在获取结果集时处理参数 -->
+    <resultMap id="role" type="com.yyl.Role">
+        <result column="name" property="name" javaType="string"
+                jdbcType="VARCHAR"></result>
+    </resultMap>
+    <select id="getRole" resultMap="role">
+        select name from role
+    </select>
+    <!-- 使用自定义typeHandler,在查询、插入、删除、更新时处理传入参数 -->
+    <insert id="addRole" parameterType="com.yyl.Role">
+        insert into role values(#{name,javaType=string,jdbcType=VARCHAR} )
+    </insert>
+
+</mapper>
