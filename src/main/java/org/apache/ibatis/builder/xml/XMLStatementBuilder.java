@@ -89,19 +89,22 @@ public class XMLStatementBuilder extends BaseBuilder {
 
     // Include Fragments before parsing
     XMLIncludeTransformer includeParser = new XMLIncludeTransformer(configuration, builderAssistant);
+    //解析include元素并移除
     includeParser.applyIncludes(context.getNode());
 
     // Parse selectKey after includes and remove them.
-    //再处理selectKey并移除
+    //解析selectKey元素并移除
     processSelectKeyNodes(id, parameterTypeClass, langDriver);
-    //最后解析sql语句
+    //解析sql语句（动态sql也是在这里解析的）
     // Parse the SQL (pre: <selectKey> and <include> were parsed and removed)
     SqlSource sqlSource = langDriver.createSqlSource(configuration, context, parameterTypeClass);
     String resultSets = context.getStringAttribute("resultSets");
     String keyProperty = context.getStringAttribute("keyProperty");
     String keyColumn = context.getStringAttribute("keyColumn");
     KeyGenerator keyGenerator;
+    //方法名+!selectKey
     String keyStatementId = id + SelectKeyGenerator.SELECT_KEY_SUFFIX;
+    //加上daoName
     keyStatementId = builderAssistant.applyCurrentNamespace(keyStatementId, true);
     if (configuration.hasKeyGenerator(keyStatementId)) {
       keyGenerator = configuration.getKeyGenerator(keyStatementId);
@@ -128,7 +131,9 @@ public class XMLStatementBuilder extends BaseBuilder {
     if (configuration.getDatabaseId() != null) {
       parseSelectKeyNodes(id, selectKeyNodes, parameterTypeClass, langDriver, configuration.getDatabaseId());
     }
+    //解析selectKey
     parseSelectKeyNodes(id, selectKeyNodes, parameterTypeClass, langDriver, null);
+    //删除selectKey
     removeSelectKeyNodes(selectKeyNodes);
   }
   /**
@@ -159,11 +164,14 @@ public class XMLStatementBuilder extends BaseBuilder {
   private void parseSelectKeyNode(String id, XNode nodeToHandle, Class<?> parameterTypeClass, LanguageDriver langDriver, String databaseId) {
     //selectKey的返回类型
     String resultType = nodeToHandle.getStringAttribute("resultType");
-
+    //selectKey的返回类型
     Class<?> resultTypeClass = resolveClass(resultType);
+    //
     StatementType statementType = StatementType.valueOf(nodeToHandle.getStringAttribute("statementType", StatementType.PREPARED.toString()));
+    //查询的值作为parameterTypeClass的属性key
     String keyProperty = nodeToHandle.getStringAttribute("keyProperty");
     String keyColumn = nodeToHandle.getStringAttribute("keyColumn");
+    //是否在sql语句执行之前执行
     boolean executeBefore = "BEFORE".equals(nodeToHandle.getStringAttribute("order", "AFTER"));
 
     //defaults
@@ -176,7 +184,7 @@ public class XMLStatementBuilder extends BaseBuilder {
     String parameterMap = null;
     String resultMap = null;
     ResultSetType resultSetTypeEnum = null;
-
+    //解析selectKey，创建对应的sqlSource
     SqlSource sqlSource = langDriver.createSqlSource(configuration, nodeToHandle, parameterTypeClass);
     SqlCommandType sqlCommandType = SqlCommandType.SELECT;
 

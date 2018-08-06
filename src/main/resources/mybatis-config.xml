@@ -21,6 +21,10 @@
         <!--当aggressiveLazyLoading为true时，就是使用层级延迟加载，改为false就是按需延迟加载-->
         <setting name="aggressiveLazyLoading" value="false"/>
     </settings>
+    <!-- mybatis自定义拦截器-->
+    <plugins>
+        <plugin interceptor="com.yyl.MyPageInterceptor"></plugin>
+    </plugins>
     <!-- 定义数据库信息 默认使用development数据库构建环境-->
     <environments default="development">
         <environment id="development">

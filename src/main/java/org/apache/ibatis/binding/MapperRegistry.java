@@ -34,6 +34,7 @@ import java.util.Set;
 public class MapperRegistry {
 
   private final Configuration config;
+  //存放以解析过得Mapper的namespace对应的dao的类型，应该是防止再次解析
   private final Map<Class<?>, MapperProxyFactory<?>> knownMappers = new HashMap<>();
 
   public MapperRegistry(Configuration config) {
@@ -41,7 +42,11 @@ public class MapperRegistry {
   }
 
   @SuppressWarnings("unchecked")
+  /**
+   * 获取mapper
+   */
   public <T> T getMapper(Class<T> type, SqlSession sqlSession) {
+    //获取dao类型对应的MapperProxyFactory
     final MapperProxyFactory<T> mapperProxyFactory = (MapperProxyFactory<T>) knownMappers.get(type);
     if (mapperProxyFactory == null) {
       throw new BindingException("Type " + type + " is not known to the MapperRegistry.");
@@ -58,6 +63,7 @@ public class MapperRegistry {
   }
 
   public <T> void addMapper(Class<T> type) {
+    //是接口
     if (type.isInterface()) {
       if (hasMapper(type)) {
         throw new BindingException("Type " + type + " is already known to the MapperRegistry.");

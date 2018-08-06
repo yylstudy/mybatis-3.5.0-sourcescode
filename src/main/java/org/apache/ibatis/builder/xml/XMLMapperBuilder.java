@@ -111,13 +111,17 @@ public class XMLMapperBuilder extends BaseBuilder {
   public void parse() {
     //判断是否已经解析过了
     if (!configuration.isResourceLoaded(resource)) {
+      //解析mapper元素
       configurationElement(parser.evalNode("/mapper"));
       configuration.addLoadedResource(resource);
+      //根据namespace构建Mapper
       bindMapperForNamespace();
     }
-
+    //解析之前因异常解析未完成的ResultMap
     parsePendingResultMaps();
+    //解析之前因异常解析未完成的cacheRef
     parsePendingCacheRefs();
+    //解析之前因异常解析未完成的Statements
     parsePendingStatements();
   }
 

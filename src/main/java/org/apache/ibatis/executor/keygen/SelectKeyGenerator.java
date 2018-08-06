@@ -33,7 +33,9 @@ import org.apache.ibatis.session.RowBounds;
 public class SelectKeyGenerator implements KeyGenerator {
   
   public static final String SELECT_KEY_SUFFIX = "!selectKey";
+  //是否在sql语句执行之前执行
   private final boolean executeBefore;
+  //在configuration中存放这个MappedStatement，MappedStatement就是解析完成的selectKey的java配置
   private final MappedStatement keyStatement;
 
   public SelectKeyGenerator(MappedStatement keyStatement, boolean executeBefore) {

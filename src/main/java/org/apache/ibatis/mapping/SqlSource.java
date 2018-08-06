@@ -21,6 +21,10 @@ package org.apache.ibatis.mapping;
  *
  * @author Clinton Begin
  */
+
+/**
+ * 该接口代表从xml文件或者注释映射的sql内容，主要用于创建BoundSql，有实现类DynamicSqlSource、StaticSqlSource
+ */
 public interface SqlSource {
 
   BoundSql getBoundSql(Object parameterObject);

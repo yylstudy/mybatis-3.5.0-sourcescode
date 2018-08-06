@@ -7,7 +7,7 @@
         <result column="name" property="name" javaType="string"
                 jdbcType="VARCHAR"></result>
     </resultMap>
-    <select id="getRole" resultMap="role">
+    <select id="getRoleByPage" resultMap="role">
         select name from role
     </select>
     <!-- 使用自定义typeHandler,在查询、插入、删除、更新时处理传入参数 -->

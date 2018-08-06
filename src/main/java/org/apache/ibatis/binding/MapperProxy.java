@@ -33,8 +33,11 @@ import org.apache.ibatis.session.SqlSession;
 public class MapperProxy<T> implements InvocationHandler, Serializable {
 
   private static final long serialVersionUID = -6424540398559729838L;
+  //创建当前mapperProxy的代理
   private final SqlSession sqlSession;
+  //mapper class类型
   private final Class<T> mapperInterface;
+  //方法缓存
   private final Map<Method, MapperMethod> methodCache;
 
   public MapperProxy(SqlSession sqlSession, Class<T> mapperInterface, Map<Method, MapperMethod> methodCache) {

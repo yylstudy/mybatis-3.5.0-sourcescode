@@ -21,6 +21,7 @@ import java.util.List;
  * @author Clinton Begin
  */
 public class MixedSqlNode implements SqlNode {
+  //存放sql的各个子标签（包含动态和静态）
   private final List<SqlNode> contents;
 
   public MixedSqlNode(List<SqlNode> contents) {

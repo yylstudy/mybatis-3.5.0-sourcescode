@@ -139,15 +139,17 @@ public class Configuration {
    * @see <a href='https://code.google.com/p/mybatis/issues/detail?id=300'>Issue 300 (google code)</a>
    */
   protected Class<?> configurationFactory;
-
+  //已经注册过得Mapper对应的dao解析器
   protected final MapperRegistry mapperRegistry = new MapperRegistry(this);
+  //自定义拦截器链
   protected final InterceptorChain interceptorChain = new InterceptorChain();
+  //typeHandler注册器
   protected final TypeHandlerRegistry typeHandlerRegistry = new TypeHandlerRegistry();
   //别名注册器
   protected final TypeAliasRegistry typeAliasRegistry = new TypeAliasRegistry();
   //语言注册器
   protected final LanguageDriverRegistry languageRegistry = new LanguageDriverRegistry();
-
+  //全局动态sql的映射关系，key是daoName+id value是MappedStatement
   protected final Map<String, MappedStatement> mappedStatements = new StrictMap<>("Mapped Statements collection");
   //存放缓存对象，key是dao的类名，值是具体的缓存类（被装饰的类）
   protected final Map<String, Cache> caches = new StrictMap<>("Caches collection");
@@ -157,14 +159,17 @@ public class Configuration {
    */
   protected final Map<String, ResultMap> resultMaps = new StrictMap<>("Result Maps collection");
   protected final Map<String, ParameterMap> parameterMaps = new StrictMap<>("Parameter Maps collection");
+  //存放特殊的解析，如selectKey
   protected final Map<String, KeyGenerator> keyGenerators = new StrictMap<>("Key Generators collection");
   //存放已经解析过的mapper文件的字符串路径
   protected final Set<String> loadedResources = new HashSet<>();
   //存放全局<sql> 元素的映射集合，daoName+"."+id-->XNode
   protected final Map<String, XNode> sqlFragments = new StrictMap<>("XML fragments parsed from previous mappers");
-
+  //存放异常解析的XMLStatementBuilder
   protected final Collection<XMLStatementBuilder> incompleteStatements = new LinkedList<>();
+  //存放异常解析的Cache
   protected final Collection<CacheRefResolver> incompleteCacheRefs = new LinkedList<>();
+  //存放异常解析的ResultMap
   protected final Collection<ResultMapResolver> incompleteResultMaps = new LinkedList<>();
   protected final Collection<MethodResolver> incompleteMethods = new LinkedList<>();
 
@@ -576,6 +581,12 @@ public class Configuration {
     return newExecutor(transaction, defaultExecutorType);
   }
 
+  /**
+   * 创建一个执行器
+   * @param transaction 事务
+   * @param executorType 执行器类型
+   * @return
+   */
   public Executor newExecutor(Transaction transaction, ExecutorType executorType) {
     executorType = executorType == null ? defaultExecutorType : executorType;
     executorType = executorType == null ? ExecutorType.SIMPLE : executorType;
@@ -585,11 +596,15 @@ public class Configuration {
     } else if (ExecutorType.REUSE == executorType) {
       executor = new ReuseExecutor(this, transaction);
     } else {
+      //创建一个SIMPLE的执行器
       executor = new SimpleExecutor(this, transaction);
     }
+    //若是开启缓存
     if (cacheEnabled) {
+      //修改BaseExecutor的wrapper属性
       executor = new CachingExecutor(executor);
     }
+    //解析自定义的拦截器
     executor = (Executor) interceptorChain.pluginAll(executor);
     return executor;
   }
