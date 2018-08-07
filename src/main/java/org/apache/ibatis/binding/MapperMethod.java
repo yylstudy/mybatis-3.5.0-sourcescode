@@ -42,33 +42,47 @@ import java.util.*;
  * @author Kazuki Shimizu
  */
 public class MapperMethod {
-
+  //sql命令对象
   private final SqlCommand command;
+  //方法的各种信息、返回类型等
   private final MethodSignature method;
 
   public MapperMethod(Class<?> mapperInterface, Method method, Configuration config) {
+    //构建一个SqlCommand
     this.command = new SqlCommand(config, mapperInterface, method);
+    //构建一个MethodSignature
     this.method = new MethodSignature(config, mapperInterface, method);
   }
 
+  /**
+   * 对sqlSession的封装调用
+   * @param sqlSession
+   * @param args 代理方法的参数
+   * @return
+   */
   public Object execute(SqlSession sqlSession, Object[] args) {
     Object result;
     switch (command.getType()) {
+      //insert 语句
       case INSERT: {
+        //获取参数及其值，其实是个Map<String,Object>
     	Object param = method.convertArgsToSqlCommandParam(args);
         result = rowCountResult(sqlSession.insert(command.getName(), param));
         break;
       }
+      //update语句
       case UPDATE: {
         Object param = method.convertArgsToSqlCommandParam(args);
         result = rowCountResult(sqlSession.update(command.getName(), param));
         break;
       }
+      //delete语句
       case DELETE: {
         Object param = method.convertArgsToSqlCommandParam(args);
         result = rowCountResult(sqlSession.delete(command.getName(), param));
         break;
       }
+      //select语句
       case SELECT:
         if (method.returnsVoid() && method.hasResultHandler()) {
           executeWithResultHandler(sqlSession, args);
@@ -214,13 +228,19 @@ public class MapperMethod {
   }
 
   public static class SqlCommand {
-
+    //MappedStatement的id值
     private final String name;
-    private final SqlCommandType type;
-
+    //sql命令类型：select、insert等
+    /**
+     * 构建一个sqlCommand
+     * @param configuration
+     * @param mapperInterface
+     * @param method
+     */
     public SqlCommand(Configuration configuration, Class<?> mapperInterface, Method method) {
       final String methodName = method.getName();
       final Class<?> declaringClass = method.getDeclaringClass();
+      //获取MappedStatement
       MappedStatement ms = resolveMappedStatement(mapperInterface, methodName, declaringClass,
           configuration);
       if (ms == null) {
@@ -240,6 +260,8 @@ public class MapperMethod {
       }
     }
 
+    private final SqlCommandType type;
+
     public String getName() {
       return name;
     }
@@ -248,14 +270,24 @@ public class MapperMethod {
       return type;
     }
 
+    /**
+     * 解析获取MappedStatement
+     * @param mapperInterface mapper接口类
+     * @param methodName 方法名
+     * @param declaringClass 方法的类
+     * @param configuration 全局配置类
+     * @return
+     */
     private MappedStatement resolveMappedStatement(Class<?> mapperInterface, String methodName,
         Class<?> declaringClass, Configuration configuration) {
       String statementId = mapperInterface.getName() + "." + methodName;
+      //若在配置类中已经找到该MappedStatement，直接返回
       if (configuration.hasStatement(statementId)) {
         return configuration.getMappedStatement(statementId);
       } else if (mapperInterface.equals(declaringClass)) {
         return null;
       }
+      //否则递归获取mapper的父接口来获取MappedStatement
       for (Class<?> superInterface : mapperInterface.getInterfaces()) {
         if (declaringClass.isAssignableFrom(superInterface)) {
           MappedStatement ms = resolveMappedStatement(superInterface, methodName,
@@ -273,16 +305,29 @@ public class MapperMethod {
 
     private final boolean returnsMany;
     private final boolean returnsMap;
+    //返回类型是否void类型
     private final boolean returnsVoid;
     private final boolean returnsCursor;
     private final boolean returnsOptional;
+    //方法返回类型
     private final Class<?> returnType;
+    //@MapKey注解的值
     private final String mapKey;
+    //参数类型为ResultHandler或其子类的下标
     private final Integer resultHandlerIndex;
+    //参数类型为RowBounds或其子类的下标
     private final Integer rowBoundsIndex;
+    //参数名称解析器
     private final ParamNameResolver paramNameResolver;
 
+    /**
+     * 获取methodSignature
+     * @param configuration 全局配置类
+     * @param mapperInterface mapper接口类
+     * @param method 被代理方法
+     */
     public MethodSignature(Configuration configuration, Class<?> mapperInterface, Method method) {
+      //获取返回类型Type
       Type resolvedReturnType = TypeParameterResolver.resolveReturnType(method, mapperInterface);
       if (resolvedReturnType instanceof Class<?>) {
         this.returnType = (Class<?>) resolvedReturnType;
@@ -302,6 +347,11 @@ public class MapperMethod {
       this.paramNameResolver = new ParamNameResolver(configuration, method);
     }
 
+    /**
+     * 将参数转化为SqlCommand对象的参数，其实是个Map<String,Object>
+     * @param args
+     * @return
+     */
     public Object convertArgsToSqlCommandParam(Object[] args) {
       return paramNameResolver.getNamedParams(args);
     }
@@ -372,7 +422,9 @@ public class MapperMethod {
 
     private String getMapKey(Method method) {
       String mapKey = null;
+      //若方法的返回类型是Map或者其子类
       if (Map.class.isAssignableFrom(method.getReturnType())) {
+        //获取方法上@MapKey的值返回
         final MapKey mapKeyAnnotation = method.getAnnotation(MapKey.class);
         if (mapKeyAnnotation != null) {
           mapKey = mapKeyAnnotation.value();

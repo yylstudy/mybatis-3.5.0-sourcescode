@@ -196,6 +196,12 @@ public class DefaultSqlSession implements SqlSession {
     return update(statement, null);
   }
 
+  /**
+   * update处理
+   * @param statement MappedStatement的id，用于获取MappedStatement
+   * @param parameter 参数的映射关系，Map<String,Object>
+   * @return
+   */
   @Override
   public int update(String statement, Object parameter) {
     try {
@@ -329,6 +335,11 @@ public class DefaultSqlSession implements SqlSession {
     return (!autoCommit && dirty) || force;
   }
 
+  /**
+   * 转换集合
+   * @param object
+   * @return
+   */
   private Object wrapCollection(final Object object) {
     if (object instanceof Collection) {
       StrictMap<Object> map = new StrictMap<>();
