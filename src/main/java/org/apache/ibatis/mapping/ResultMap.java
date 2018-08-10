@@ -35,18 +35,28 @@ import org.apache.ibatis.session.Configuration;
  * @author Clinton Begin
  */
 public class ResultMap {
+  //全局配置类
   private Configuration configuration;
-
+  //resultMap的唯一标识 结构是：dao类名+"."+resultMap的id
   private String id;
+  //resultMap的java类型
   private Class<?> type;
+  //resultMap下子元素的对象集合
   private List<ResultMapping> resultMappings;
+  //<resultMap>下id标签的集合
   private List<ResultMapping> idResultMappings;
+  //<resultMap>下constructor标签的集合
   private List<ResultMapping> constructorResultMappings;
+  //<resultMap>下property标签的集合
   private List<ResultMapping> propertyResultMappings;
+  //resultMap的数据库列名集合
   private Set<String> mappedColumns;
+  //resultMap的属性字段名集合
   private Set<String> mappedProperties;
   private Discriminator discriminator;
+  //association、collection的是否包含resultMap
   private boolean hasNestedResultMaps;
+  //association、collection是否包含select 元素
   private boolean hasNestedQueries;
   private Boolean autoMapping;
 
@@ -79,6 +89,10 @@ public class ResultMap {
       return resultMap.type;
     }
 
+    /**
+     * 构建resultMap对象
+     * @return
+     */
     public ResultMap build() {
       if (resultMap.id == null) {
         throw new IllegalArgumentException("ResultMaps must have an id");
@@ -92,6 +106,7 @@ public class ResultMap {
       for (ResultMapping resultMapping : resultMap.resultMappings) {
         resultMap.hasNestedQueries = resultMap.hasNestedQueries || resultMapping.getNestedQueryId() != null;
         resultMap.hasNestedResultMaps = resultMap.hasNestedResultMaps || (resultMapping.getNestedResultMapId() != null && resultMapping.getResultSet() == null);
+        //获取列名
         final String column = resultMapping.getColumn();
         if (column != null) {
           resultMap.mappedColumns.add(column.toUpperCase(Locale.ENGLISH));
@@ -103,6 +118,7 @@ public class ResultMap {
             }
           }
         }
+        //获取字段名
         final String property = resultMapping.getProperty();
         if(property != null) {
           resultMap.mappedProperties.add(property);
@@ -119,6 +135,7 @@ public class ResultMap {
           resultMap.idResultMappings.add(resultMapping);
         }
       }
+      //若没有id标签，则将所有的子标签加入到idResultMappings
       if (resultMap.idResultMappings.isEmpty()) {
         resultMap.idResultMappings.addAll(resultMap.resultMappings);
       }

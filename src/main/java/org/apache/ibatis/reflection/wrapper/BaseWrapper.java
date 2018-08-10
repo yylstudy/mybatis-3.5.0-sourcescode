@@ -28,6 +28,7 @@ import org.apache.ibatis.reflection.property.PropertyTokenizer;
 public abstract class BaseWrapper implements ObjectWrapper {
 
   protected static final Object[] NO_ARGUMENTS = new Object[0];
+  //对象描述
   protected final MetaObject metaObject;
 
   protected BaseWrapper(MetaObject metaObject) {

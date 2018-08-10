@@ -89,7 +89,7 @@ public class MyPageInterceptor implements Interceptor {
 
     /**
      *
-     * 决定是否拦截进而决定要返回一个什么样的对象
+     * 生成拦截器处理过的代理对象
      * @param target  CachingExecutor
      * @return
      */
@@ -103,7 +103,7 @@ public class MyPageInterceptor implements Interceptor {
         }
     }
 
-
+    //这个方法就是将xml中的属性值注入到这个类中，查看源码可知
     @Override
     public void setProperties(Properties properties) {
 

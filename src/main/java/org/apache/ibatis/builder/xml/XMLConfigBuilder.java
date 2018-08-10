@@ -117,8 +117,9 @@ public class XMLConfigBuilder extends BaseBuilder {
       //issue #117 read properties first
       //解析properties元素
       propertiesElement(root.evalNode("properties"));
-      //解析settings属性
+      //校验Configuration中是否包含settings设置的key
       Properties settings = settingsAsProperties(root.evalNode("settings"));
+      //settings下property的name为vfsImpl标签
       loadCustomVfs(settings);
       //解析typeAliases属性
       typeAliasesElement(root.evalNode("typeAliases"));
@@ -126,13 +127,16 @@ public class XMLConfigBuilder extends BaseBuilder {
       pluginElement(root.evalNode("plugins"));
       //解析ObejctFactory属性
       objectFactoryElement(root.evalNode("objectFactory"));
+      //解析ObjectWrapperFactory属性
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
+      //解析reflectorFactory属性
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
       //解析settings属性
       settingsElement(settings);
       // read it after objectFactory and objectWrapperFactory issue #631
       //解析environments属性
       environmentsElement(root.evalNode("environments"));
+      //解析databaseIdProvider
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
       //解析typeHandler属性
       typeHandlerElement(root.evalNode("typeHandlers"));
@@ -145,7 +149,7 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   /**
    *
-   * 解析settings标签
+   * 校验Configuration是否包含settings标签中定义的key
    * @param context settings元素
    * @return
    */
@@ -155,7 +159,13 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
     Properties props = context.getChildrenAsProperties();
     // Check that all settings are known to the configuration class
+    /**
+     * 获取configuration的反射器类
+     */
     MetaClass metaConfig = MetaClass.forClass(Configuration.class, localReflectorFactory);
+    /**
+     * 校验Configuration类是否包含<settings></settings>配置的key，若不包含，则抛出异常
+     */
     for (Object key : props.keySet()) {
       if (!metaConfig.hasSetter(String.valueOf(key))) {
         throw new BuilderException("The setting " + key + " is not known.  Make sure you spelled it correctly (case sensitive).");
@@ -222,6 +232,7 @@ public class XMLConfigBuilder extends BaseBuilder {
         Properties properties = child.getChildrenAsProperties();
         //反射出一个拦截器实例
         Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).newInstance();
+        //将自定义拦截器中配置的属性注入到拦截器类的属性中
         interceptorInstance.setProperties(properties);
         configuration.addInterceptor(interceptorInstance);
       }
@@ -236,7 +247,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       Properties properties = context.getChildrenAsProperties();
       //自定义的ObjectFactorty都要实现ObjectFactory接口，先获取Class对象，再反射出一个实例
       ObjectFactory factory = (ObjectFactory) resolveClass(type).newInstance();
-      //填充属性
+      //将xml中配置的属性填充到ObjectFactory实例
       factory.setProperties(properties);
       configuration.setObjectFactory(factory);
     }
@@ -324,7 +335,7 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   /**
    * 解析enviorments属性
-   * @param context
+   * @param context environments标签
    * @throws Exception
    */
   private void environmentsElement(XNode context) throws Exception {
@@ -372,7 +383,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   /**
-   * 解析transactionManagerElement属性
+   * 解析transactionManager属性
    * @param context
    * @return
    * @throws Exception
@@ -411,6 +422,7 @@ public class XMLConfigBuilder extends BaseBuilder {
        * 对dataSource赋值
        */
       DataSourceFactory factory = (DataSourceFactory) resolveClass(type).newInstance();
+      //填充datasource的属性，以获取连接
       factory.setProperties(props);
       return factory;
     }
@@ -477,6 +489,8 @@ public class XMLConfigBuilder extends BaseBuilder {
             InputStream inputStream = Resources.getResourceAsStream(resource);
             /**
              * 构建XMLMapperBuilder
+             * 这里进行了几个赋值，configuration的sqlFragments也是在这里和XMLMapperBuilder中关联的
+             * 所以后面解析includu直接使用XMLMapperBuilder中的sqlFragments，表示全局<sql>标签对象
              */
             XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource, configuration.getSqlFragments());
             //解析mapper中的具体元素

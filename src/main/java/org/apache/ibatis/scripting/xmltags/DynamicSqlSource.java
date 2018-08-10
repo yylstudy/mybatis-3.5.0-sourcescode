@@ -36,12 +36,25 @@ public class DynamicSqlSource implements SqlSource {
     this.rootSqlNode = rootSqlNode;
   }
 
+  /**
+   * @param parameterObject 参数名和参数值的映射关系，Map<String,Object>
+   * 获取动态sql的BoundSql对象
+   * @return 上下文Map，其中包含参数等
+   */
   @Override
   public BoundSql getBoundSql(Object parameterObject) {
+    //创建动态上下文
     DynamicContext context = new DynamicContext(configuration, parameterObject);
+    /**
+     * 解析动态sql的表达式，动态的sql语句就是在这里生成sql字符串的并且在这里将sql语句append到
+     * 注意这里apply，是采用装饰类模式，大部分都是判断表达式本身，但是最底层的TextSqlNode
+     * 就是这个类的apply方法将sql字符串赋值给boundSql对象
+     */
     rootSqlNode.apply(context);
+    //创建一个sqlSourceBuilder，用于解析sqlSource
     SqlSourceBuilder sqlSourceParser = new SqlSourceBuilder(configuration);
     Class<?> parameterType = parameterObject == null ? Object.class : parameterObject.getClass();
+    //解析sqlSource
     SqlSource sqlSource = sqlSourceParser.parse(context.getSql(), parameterType, context.getBindings());
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
     for (Map.Entry<String, Object> entry : context.getBindings().entrySet()) {

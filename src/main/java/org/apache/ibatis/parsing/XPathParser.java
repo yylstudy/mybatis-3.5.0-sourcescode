@@ -47,7 +47,7 @@ public class XPathParser {
   private final Document document;//资源解析文件的Document实例
   private boolean validation;//true
   private EntityResolver entityResolver; //dtd解析文件的位置
-  private Properties variables; //存放configuration解析完成的properties
+  private Properties variables; //存放configuration解析完成的<properties/>标签
   private XPath xpath;
 
   public XPathParser(String xml) {

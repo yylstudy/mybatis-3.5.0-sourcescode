@@ -24,8 +24,10 @@ import org.apache.ibatis.type.SimpleTypeRegistry;
 
 /**
  * @author Clinton Begin
+ * 动态的文本sql，其中包含${}
  */
 public class TextSqlNode implements SqlNode {
+  //动态的文本sql
   private final String text;
   private final Pattern injectionFilter;
 
@@ -48,6 +50,7 @@ public class TextSqlNode implements SqlNode {
   @Override
   public boolean apply(DynamicContext context) {
     GenericTokenParser parser = createParser(new BindingTokenParser(context, injectionFilter));
+
     context.appendSql(parser.parse(text));
     return true;
   }

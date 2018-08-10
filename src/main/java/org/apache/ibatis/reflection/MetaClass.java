@@ -39,7 +39,7 @@ public class MetaClass {
     this.reflectorFactory = reflectorFactory;
     this.reflector = reflectorFactory.findForClass(type);
   }
-
+  //获取对象的MetaClass对象
   public static MetaClass forClass(Class<?> type, ReflectorFactory reflectorFactory) {
     return new MetaClass(type, reflectorFactory);
   }
@@ -131,7 +131,7 @@ public class MetaClass {
     }
     return null;
   }
-
+  //校验反射器是否包含name元素的setter方法
   public boolean hasSetter(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {

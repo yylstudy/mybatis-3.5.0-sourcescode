@@ -73,6 +73,7 @@ public class MapperMethod {
       //update语句
       case UPDATE: {
         Object param = method.convertArgsToSqlCommandParam(args);
+        //获取返回值
         result = rowCountResult(sqlSession.update(command.getName(), param));
         break;
       }
@@ -302,12 +303,15 @@ public class MapperMethod {
   }
 
   public static class MethodSignature {
-
+    //是否返回多条
     private final boolean returnsMany;
+    //mapKey是否为空
     private final boolean returnsMap;
     //返回类型是否void类型
     private final boolean returnsVoid;
+    //方法返回类型是否是Cursor
     private final boolean returnsCursor;
+    //方法返回类型是否是Optional
     private final boolean returnsOptional;
     //方法返回类型
     private final Class<?> returnType;
@@ -321,7 +325,7 @@ public class MapperMethod {
     private final ParamNameResolver paramNameResolver;
 
     /**
-     * 获取methodSignature
+     * 获取methodSignature，这个对象是mybatis在容器内部的表示
      * @param configuration 全局配置类
      * @param mapperInterface mapper接口类
      * @param method 被代理方法
@@ -342,8 +346,11 @@ public class MapperMethod {
       this.returnsOptional = Optional.class.equals(this.returnType);
       this.mapKey = getMapKey(method);
       this.returnsMap = this.mapKey != null;
+      //参数类型为RowBounds或其子类的下标
       this.rowBoundsIndex = getUniqueParamIndex(method, RowBounds.class);
+      //参数类型为ResultHandler或其子类的下标
       this.resultHandlerIndex = getUniqueParamIndex(method, ResultHandler.class);
+      //参数名称解析器
       this.paramNameResolver = new ParamNameResolver(configuration, method);
     }
 

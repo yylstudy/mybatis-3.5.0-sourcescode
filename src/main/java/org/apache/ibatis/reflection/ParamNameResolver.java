@@ -45,9 +45,9 @@ public class ParamNameResolver {
    * <li>aMethod(int a, RowBounds rb, int b) -&gt; {{0, "0"}, {2, "1"}}</li>
    * </ul>
    */
-  //注解下标和其参数名的关系
+  //参数的下标和其参数名的关系
   private final SortedMap<Integer, String> names;
-  //是否包含@Param注解
+  //当前方法参是否包含@Param注解
   private boolean hasParamAnnotation;
 
   /**
@@ -58,10 +58,14 @@ public class ParamNameResolver {
   public ParamNameResolver(Configuration config, Method method) {
     //获取方法参数类型数组
     final Class<?>[] paramTypes = method.getParameterTypes();
-    //获取方法参数注解
+    /**
+     * 获取方法参数注解
+     * 这里是个二维数组的原因是因为 一个才能参数上可以有多个注解
+     * 第一个下标表示参数的个数，第二个下标表示参数上具体的注解
+     */
     final Annotation[][] paramAnnotations = method.getParameterAnnotations();
     final SortedMap<Integer, String> map = new TreeMap<>();
-    //参数注解个数
+    //参数个数
     int paramCount = paramAnnotations.length;
     // get names from @Param annotations
     for (int paramIndex = 0; paramIndex < paramCount; paramIndex++) {
@@ -71,6 +75,7 @@ public class ParamNameResolver {
       }
       //xml中的参数名
       String name = null;
+      //paramAnnotations[paramIndex]表示对应参数上的注解数组，可能长度为0
       for (Annotation annotation : paramAnnotations[paramIndex]) {
         //若是注解是@Param注解
         if (annotation instanceof Param) {
@@ -83,8 +88,10 @@ public class ParamNameResolver {
       if (name == null) {
         // @Param was not specified.
         if (config.isUseActualParamName()) {
+          //获取参数名称
           name = getActualParamName(method, paramIndex);
         }
+        //若参数名称为空，直接返回map长度作为xml中的参数名
         if (name == null) {
           // use the parameter index as the name ("0", "1", ...)
           // gcode issue #71
@@ -97,7 +104,7 @@ public class ParamNameResolver {
   }
 
   /**
-   *
+   * 根据参数下标获取参数名称
    * @param method 方法对象
    * @param paramIndex 参数下标
    * @return
@@ -131,8 +138,8 @@ public class ParamNameResolver {
    * </p>
    */
   /**
-   * 这里说的参数名称应该都是指定在xml中的
-   * @param args
+   * 这里说的参数名称应该都是指定在xml中的，参数若是有@Param注解则参数名称使用注解的值，否则就是方法的参数名称
+   * @param args 参数值
    * @return
    */
   public Object getNamedParams(Object[] args) {
@@ -148,10 +155,12 @@ public class ParamNameResolver {
       final Map<String, Object> param = new ParamMap<>();
       int i = 0;
       for (Map.Entry<Integer, String> entry : names.entrySet()) {
+        //将参数名，以及参数值插入到Map中
         param.put(entry.getValue(), args[entry.getKey()]);
         // add generic param names (param1, param2, ...)
         final String genericParamName = GENERIC_NAME_PREFIX + String.valueOf(i + 1);
         // ensure not to overwrite parameter named with @Param
+        //并且将param+参数序号 --->参数值 插入到Map中
         if (!names.containsValue(genericParamName)) {
           param.put(genericParamName, args[entry.getKey()]);
         }

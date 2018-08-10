@@ -198,7 +198,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
    * @param type resultMap的java类型
    * @param extend
    * @param discriminator
-   * @param resultMappings 解析完成的resultMap
+   * @param resultMappings 解析完成的resultMap下子元素对象
    * @param autoMapping
    * @return
    */
@@ -281,6 +281,30 @@ public class MapperBuilderAssistant extends BaseBuilder {
     return new Discriminator.Builder(configuration, resultMapping, namespaceDiscriminatorMap).build();
   }
 
+  /**
+   * 构建MappedStatement
+   * @param id dao的方法名+"!selectKey"
+   * @param sqlSource sqlSource，里面包含sql的Node对象，可以根据getBoundSql获取sql语句
+   * @param statementType
+   * @param sqlCommandType sql语句类型
+   * @param fetchSize 查询结果集大小
+   * @param timeout 超时时间
+   * @param parameterMap  参数Map字符串
+   * @param parameterType 参数类型
+   * @param resultMap resultMap
+   * @param resultType 结果类型
+   * @param resultSetType
+   * @param flushCache 是否刷新缓存
+   * @param useCache 是否使用缓存
+   * @param resultOrdered
+   * @param keyGenerator
+   * @param keyProperty 映射到JavaBean的属性字段
+   * @param keyColumn 映射的column
+   * @param databaseId
+   * @param lang
+   * @param resultSets
+   * @return
+   */
   public MappedStatement addMappedStatement(
       String id,
       SqlSource sqlSource,
@@ -306,8 +330,9 @@ public class MapperBuilderAssistant extends BaseBuilder {
     if (unresolvedCacheRef) {
       throw new IncompleteElementException("Cache-ref not yet resolved");
     }
-    //检查selectKey的id是否加上daoName
+    //检查id是否加上daoName
     id = applyCurrentNamespace(id, false);
+    //是否是查询语句
     boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
     //构建器模式创建MappedStatement
     MappedStatement.Builder statementBuilder = new MappedStatement.Builder(configuration, id, sqlSource, sqlCommandType)
@@ -322,12 +347,13 @@ public class MapperBuilderAssistant extends BaseBuilder {
         .lang(lang)
         .resultOrdered(resultOrdered)
         .resultSets(resultSets)
+        //获取ResultMap
         .resultMaps(getStatementResultMaps(resultMap, resultType, id))
         .resultSetType(resultSetType)
         .flushCacheRequired(valueOrDefault(flushCache, !isSelect))
         .useCache(valueOrDefault(useCache, isSelect))
         .cache(currentCache);
-
+    //获取参数Map
     ParameterMap statementParameterMap = getStatementParameterMap(parameterMap, parameterType, id);
     if (statementParameterMap != null) {
       statementBuilder.parameterMap(statementParameterMap);
@@ -365,6 +391,13 @@ public class MapperBuilderAssistant extends BaseBuilder {
     return parameterMap;
   }
 
+  /**
+   * 获取ResultMap集合
+   * @param resultMap 返回Map的字符串
+   * @param resultType 返回类型
+   * @param statementId
+   * @return
+   */
   private List<ResultMap> getStatementResultMaps(
       String resultMap,
       Class<?> resultType,
@@ -372,6 +405,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
     resultMap = applyCurrentNamespace(resultMap, true);
 
     List<ResultMap> resultMaps = new ArrayList<>();
+    //resultMap字符串不为空，则试着从configuration中获取
     if (resultMap != null) {
       String[] resultMapNames = resultMap.split(",");
       for (String resultMapName : resultMapNames) {
@@ -400,8 +434,8 @@ public class MapperBuilderAssistant extends BaseBuilder {
    * @param column
    * @param javaType 这个字段的返回类型
    * @param jdbcType
-   * @param nestedSelect
-   * @param nestedResultMap
+   * @param nestedSelect association、collection的select属性
+   * @param nestedResultMap  association、collection的 resultMap属性
    * @param notNullColumn
    * @param columnPrefix
    * @param typeHandler
@@ -499,6 +533,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
     //若javaType为空，而属性值不为空，那么推导出该属性的javaType
     if (javaType == null && property != null) {
       try {
+        //创建返回类型的反射器对象
         MetaClass metaResultType = MetaClass.forClass(resultType, configuration.getReflectorFactory());
         //由属性名推导出对应的java类型
         javaType = metaResultType.getSetterType(property);

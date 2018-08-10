@@ -72,16 +72,19 @@ public class TypeParameterResolver {
 
   /**
    * 解析类型
-   * @param type  返回类型
+   * @param type  方法返回类型
    * @param srcType 反射器反射类的类型
    * @param declaringClass 方法的类对象
    * @return
    */
   private static Type resolveType(Type type, Type srcType, Class<?> declaringClass) {
+    //各种类型变量的公共父接口
     if (type instanceof TypeVariable) {
       return resolveTypeVar((TypeVariable<?>) type, srcType, declaringClass);
+      //ParameterizedType 表示一种参数化类型，比如Collection、Map
     } else if (type instanceof ParameterizedType) {
       return resolveParameterizedType((ParameterizedType) type, srcType, declaringClass);
+      //表示元素类型是参数化类型或者类型变量的数组类型
     } else if (type instanceof GenericArrayType) {
       return resolveGenericArrayType((GenericArrayType) type, srcType, declaringClass);
     } else {
@@ -107,7 +110,9 @@ public class TypeParameterResolver {
   }
 
   private static ParameterizedType resolveParameterizedType(ParameterizedType parameterizedType, Type srcType, Class<?> declaringClass) {
+    //type的原始类型
     Class<?> rawType = (Class<?>) parameterizedType.getRawType();
+    //
     Type[] typeArgs = parameterizedType.getActualTypeArguments();
     Type[] args = new Type[typeArgs.length];
     for (int i = 0; i < typeArgs.length; i++) {

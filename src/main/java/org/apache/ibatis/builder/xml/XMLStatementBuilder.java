@@ -82,11 +82,14 @@ public class XMLStatementBuilder extends BaseBuilder {
 
     String nodeName = context.getNode().getNodeName();
     SqlCommandType sqlCommandType = SqlCommandType.valueOf(nodeName.toUpperCase(Locale.ENGLISH));
+    //是否是select语句
     boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
+    //若不设置flushCache，默认非select语句会刷新缓存
     boolean flushCache = context.getBooleanAttribute("flushCache", !isSelect);
+    //若不设置，默认select语句会使用缓存
     boolean useCache = context.getBooleanAttribute("useCache", isSelect);
     boolean resultOrdered = context.getBooleanAttribute("resultOrdered", false);
-
+    //创建XMLIncludeTransformer
     // Include Fragments before parsing
     XMLIncludeTransformer includeParser = new XMLIncludeTransformer(configuration, builderAssistant);
     //解析include元素并移除
@@ -106,6 +109,7 @@ public class XMLStatementBuilder extends BaseBuilder {
     String keyStatementId = id + SelectKeyGenerator.SELECT_KEY_SUFFIX;
     //加上daoName
     keyStatementId = builderAssistant.applyCurrentNamespace(keyStatementId, true);
+    //判断之前的selectKey是否已经存在当前要执行的sql
     if (configuration.hasKeyGenerator(keyStatementId)) {
       keyGenerator = configuration.getKeyGenerator(keyStatementId);
     } else {
@@ -154,6 +158,16 @@ public class XMLStatementBuilder extends BaseBuilder {
   }
 
   /**
+   * 删除 selectKey 文本
+   * @param selectKeyNodes
+   */
+  private void removeSelectKeyNodes(List<XNode> selectKeyNodes) {
+    for (XNode nodeToHandle : selectKeyNodes) {
+      nodeToHandle.getParent().getNode().removeChild(nodeToHandle.getNode());
+    }
+  }
+
+  /**
    *处理selectKey（selectKey经常作为insert主键返回）
    * @param id  dao的方法名+"!selectKey"
    * @param nodeToHandle selectKey节点
@@ -166,7 +180,7 @@ public class XMLStatementBuilder extends BaseBuilder {
     String resultType = nodeToHandle.getStringAttribute("resultType");
     //selectKey的返回类型
     Class<?> resultTypeClass = resolveClass(resultType);
-    //
+    //statementType
     StatementType statementType = StatementType.valueOf(nodeToHandle.getStringAttribute("statementType", StatementType.PREPARED.toString()));
     //查询的值作为parameterTypeClass的属性key
     String keyProperty = nodeToHandle.getStringAttribute("keyProperty");
@@ -187,26 +201,16 @@ public class XMLStatementBuilder extends BaseBuilder {
     //解析selectKey，创建对应的sqlSource
     SqlSource sqlSource = langDriver.createSqlSource(configuration, nodeToHandle, parameterTypeClass);
     SqlCommandType sqlCommandType = SqlCommandType.SELECT;
-
+    //创建一个MappedStatement
     builderAssistant.addMappedStatement(id, sqlSource, statementType, sqlCommandType,
-        fetchSize, timeout, parameterMap, parameterTypeClass, resultMap, resultTypeClass,
-        resultSetTypeEnum, flushCache, useCache, resultOrdered,
-        keyGenerator, keyProperty, keyColumn, databaseId, langDriver, null);
-
+            fetchSize, timeout, parameterMap, parameterTypeClass, resultMap, resultTypeClass,
+            resultSetTypeEnum, flushCache, useCache, resultOrdered,
+            keyGenerator, keyProperty, keyColumn, databaseId, langDriver, null);
+    //加上namespace
     id = builderAssistant.applyCurrentNamespace(id, false);
 
     MappedStatement keyStatement = configuration.getMappedStatement(id, false);
     configuration.addKeyGenerator(id, new SelectKeyGenerator(keyStatement, executeBefore));
-  }
-
-  /**
-   * 删除 selectKey 文本
-   * @param selectKeyNodes
-   */
-  private void removeSelectKeyNodes(List<XNode> selectKeyNodes) {
-    for (XNode nodeToHandle : selectKeyNodes) {
-      nodeToHandle.getParent().getNode().removeChild(nodeToHandle.getNode());
-    }
   }
 
   private boolean databaseIdMatchesCurrent(String id, String databaseId, String requiredDatabaseId) {

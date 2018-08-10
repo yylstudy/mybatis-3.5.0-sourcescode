@@ -37,11 +37,17 @@ public class DynamicContext {
   static {
     OgnlRuntime.setPropertyAccessor(ContextMap.class, new ContextAccessor());
   }
-
+  //上下文Map，其中包含 参数的MetaObject 对象 ，并且包含参数值
   private final ContextMap bindings;
+  //sql语句字符串
   private final StringBuilder sqlBuilder = new StringBuilder();
   private int uniqueNumber = 0;
 
+  /**
+   *  构建动态上下文
+   * @param configuration
+   * @param parameterObject 参数名和参数值的映射关系，Map<String,Object>
+   */
   public DynamicContext(Configuration configuration, Object parameterObject) {
     if (parameterObject != null && !(parameterObject instanceof Map)) {
       MetaObject metaObject = configuration.newMetaObject(parameterObject);
@@ -76,7 +82,7 @@ public class DynamicContext {
 
   static class ContextMap extends HashMap<String, Object> {
     private static final long serialVersionUID = 2977601501966151582L;
-
+    //若参数为Map类型，那么这个为空
     private MetaObject parameterMetaObject;
     public ContextMap(MetaObject parameterMetaObject) {
       this.parameterMetaObject = parameterMetaObject;

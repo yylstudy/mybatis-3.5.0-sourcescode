@@ -37,19 +37,31 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
  * @author Clinton Begin
  */
 public abstract class BaseStatementHandler implements StatementHandler {
-
+  //全局配置
   protected final Configuration configuration;
+  //构建范湖JavaBean 工厂实例
   protected final ObjectFactory objectFactory;
+  //typeHandler注册器
   protected final TypeHandlerRegistry typeHandlerRegistry;
   protected final ResultSetHandler resultSetHandler;
   protected final ParameterHandler parameterHandler;
-
+  //执行器
   protected final Executor executor;
+  //mappedStatement
   protected final MappedStatement mappedStatement;
+  //RowBounds
   protected final RowBounds rowBounds;
-
+  //要执行的sql对象
   protected BoundSql boundSql;
-
+  /**
+   * 构建一个基础的StatementHandler
+   * @param executor
+   * @param mappedStatement
+   * @param parameterObject 参数名和参数值的映射关系，Map<String,Object>
+   * @param rowBounds
+   * @param resultHandler
+   * @param boundSql
+   */
   protected BaseStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
     this.configuration = mappedStatement.getConfiguration();
     this.executor = executor;
@@ -61,12 +73,14 @@ public abstract class BaseStatementHandler implements StatementHandler {
 
     if (boundSql == null) { // issue #435, get the key before calculating the statement
       generateKeys(parameterObject);
+      //获取boundSql对象
       boundSql = mappedStatement.getBoundSql(parameterObject);
     }
 
     this.boundSql = boundSql;
-
+    //创建sqlSession 下的四大对象之一，parameterHandler，用于处理参数
     this.parameterHandler = configuration.newParameterHandler(mappedStatement, parameterObject, boundSql);
+    //创建sqlSession下的四大对象之一，resultSetHandler，用于处理返回结果集
     this.resultSetHandler = configuration.newResultSetHandler(executor, mappedStatement, rowBounds, parameterHandler, resultHandler, boundSql);
   }
 
@@ -80,11 +94,19 @@ public abstract class BaseStatementHandler implements StatementHandler {
     return parameterHandler;
   }
 
+  /**
+   * statement 的准备方法，获取一个JDBC的statement
+   * @param connection
+   * @param transactionTimeout
+   * @return
+   * @throws SQLException
+   */
   @Override
   public Statement prepare(Connection connection, Integer transactionTimeout) throws SQLException {
     ErrorContext.instance().sql(boundSql.getSql());
     Statement statement = null;
     try {
+      //初始化一个statement，比如经常使用到的PreparedStatement
       statement = instantiateStatement(connection);
       setStatementTimeout(statement, transactionTimeout);
       setFetchSize(statement);
@@ -135,7 +157,17 @@ public abstract class BaseStatementHandler implements StatementHandler {
     }
   }
 
+  /**
+   * 允许JDBC自动生成主键
+   * @param parameter
+   */
   protected void generateKeys(Object parameter) {
+    /**
+     * 获取主键生成策略
+     * Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE
+     * 可以看到 若是NoKeyGenerator 则processBefore do nothing
+     *
+     */
     KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
     ErrorContext.instance().store();
     keyGenerator.processBefore(executor, mappedStatement, null, parameter);

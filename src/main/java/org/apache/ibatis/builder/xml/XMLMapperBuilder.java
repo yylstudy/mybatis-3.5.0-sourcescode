@@ -82,7 +82,7 @@ public class XMLMapperBuilder extends BaseBuilder {
    * @param inputStream mapper文件的输入流
    * @param configuration 配置类
    * @param resource mapper的字符串路径
-   * @param sqlFragments
+   * @param sqlFragments <sql></sql>标签对象
    */
   public XMLMapperBuilder(InputStream inputStream, Configuration configuration, String resource, Map<String, XNode> sqlFragments) {
     //方法参数和构建XMLConfigBuilder是一样的
@@ -179,6 +179,10 @@ public class XMLMapperBuilder extends BaseBuilder {
       //构建XMLStatementBuilder
       final XMLStatementBuilder statementParser = new XMLStatementBuilder(configuration, builderAssistant, context, requiredDatabaseId);
       try {
+        /**
+         * 解析语句成MappedStatement,MappedStatement就是语句在mybatis中的表现形式
+         * 并加入到缓存中
+         */
         statementParser.parseStatementNode();
       } catch (IncompleteElementException e) {
         configuration.addIncompleteStatement(statementParser);
@@ -253,13 +257,17 @@ public class XMLMapperBuilder extends BaseBuilder {
       String type = context.getStringAttribute("type", "PERPETUAL");
       //获取自定义缓存的Class
       Class<? extends Cache> typeClass = typeAliasRegistry.resolveAlias(type);
-      //获取缓存回收策略
+      //获取缓存回收策略，LRU在别名注册器类对应的是LruCache
       String eviction = context.getStringAttribute("eviction", "LRU");
       //获取缓存回收策略的Class
       Class<? extends Cache> evictionClass = typeAliasRegistry.resolveAlias(eviction);
+      //刷新间隔时间
       Long flushInterval = context.getLongAttribute("flushInterval");
+      //缓存长度
       Integer size = context.getIntAttribute("size");
+      //是否只读
       boolean readWrite = !context.getBooleanAttribute("readOnly", false);
+      //是否阻塞
       boolean blocking = context.getBooleanAttribute("blocking", false);
       Properties props = context.getChildrenAsProperties();
       //使用mybatis的二级缓存
@@ -324,14 +332,17 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   /**
    * 解析resultMap节点
-   * @param resultMapNode resultMap节点
+   * @param resultMapNode resultMap节点或者<association><collection>节点
    * @param additionalResultMappings 集合
    * @return
    * @throws Exception
    */
   private ResultMap resultMapElement(XNode resultMapNode, List<ResultMapping> additionalResultMappings) throws Exception {
     ErrorContext.instance().activity("processing " + resultMapNode.getValueBasedIdentifier());
-    //获取id值
+    /**
+     * 获取id值，这里的id值可能是resultMap的id属性，如果是<association><collection>标签
+     * 那么是没有id属性的就需要通过resultMapNode.getValueBasedIdentifier()方法获取
+     */
     String id = resultMapNode.getStringAttribute("id",
         resultMapNode.getValueBasedIdentifier());
     //获取type值
@@ -344,6 +355,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     //获取type对应的Class
     Class<?> typeClass = resolveClass(type);
     Discriminator discriminator = null;
+    //这个其实是resultMapping下的子元素的对象集合
     List<ResultMapping> resultMappings = new ArrayList<>();
     resultMappings.addAll(additionalResultMappings);
     List<XNode> resultChildren = resultMapNode.getChildren();
@@ -451,7 +463,7 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   /**
    * 解析resultMap下子标签
-   * @param context resultMap下子标签
+   * @param context resultMap下子标签<result>、<id>等
    * @param resultType resultType
    * @param flags <id/>标签的集合
    * @return
@@ -468,6 +480,9 @@ public class XMLMapperBuilder extends BaseBuilder {
     String javaType = context.getStringAttribute("javaType");
     String jdbcType = context.getStringAttribute("jdbcType");
     String nestedSelect = context.getStringAttribute("select");
+    /**
+     * 判断resultMap是否存在值，若是不存在，并且标签为 association、collection、case，则进行解析
+     */
     String nestedResultMap = context.getStringAttribute("resultMap",
         processNestedResultMappings(context, Collections.<ResultMapping> emptyList()));
     String notNullColumn = context.getStringAttribute("notNullColumn");
@@ -485,12 +500,24 @@ public class XMLMapperBuilder extends BaseBuilder {
     JdbcType jdbcTypeEnum = resolveJdbcType(jdbcType);
     return builderAssistant.buildResultMapping(resultType, property, column, javaTypeClass, jdbcTypeEnum, nestedSelect, nestedResultMap, notNullColumn, columnPrefix, typeHandlerClass, flags, resultSet, foreignColumn, lazy);
   }
-  
+
+  /**
+   * 解析association、collection、case下的子标签（也就是不存在select节点）
+   * @param context
+   * @param resultMappings
+   * @return
+   * @throws Exception
+   */
   private String processNestedResultMappings(XNode context, List<ResultMapping> resultMappings) throws Exception {
     if ("association".equals(context.getName())
         || "collection".equals(context.getName())
         || "case".equals(context.getName())) {
       if (context.getStringAttribute("select") == null) {
+        /**
+         * 递归解析association、collection、case下的子标签，将其解析成一个个resultMapping
+         * 并返回一个resultMap，这里也会将association、collection、case解析成resultMap加入到configuration
+         * 中，并且返回一个id，将这个id和其外层resultMap标签关联，就是这么关联上的
+         */
         ResultMap resultMap = resultMapElement(context, resultMappings);
         return resultMap.getId();
       }

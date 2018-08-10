@@ -63,7 +63,7 @@ public class Reflector {
    * 或者没有getset方法的属性名  属性名->属性类型
    */
   private final Map<String, Class<?>> setTypes = new HashMap<>();
-  //反射器的get方法的返回类型
+  //反射器的get方法的      属性名-> 返回类型
   private final Map<String, Class<?>> getTypes = new HashMap<>();
   //默认构造函数
   private Constructor<?> defaultConstructor;
@@ -94,7 +94,7 @@ public class Reflector {
       if (constructor.getParameterTypes().length == 0) {
         if (canControlMemberAccessible()) {
           try {
-            //修饰符作用域检查，如果是私有构造器，必须加上这个，否则无法根据这个constructor反射出实例
+            //关闭java权限检查
             constructor.setAccessible(true);
           } catch (Exception e) {
             // Ignored. This is only a final precaution, nothing we can do.
@@ -131,7 +131,17 @@ public class Reflector {
     //解决方法冲突
     resolveGetterConflicts(conflictingGetters);
   }
-  //解决方法冲突
+
+  /**
+   *      解决方法冲突（应该是解决一个属性上有多个get方法，并且这些方法的），这个取到的属性值是一样的，但是方法只需要获取一个
+   *      public List getusername() {
+   *         return username;
+   *     }
+   *     public ArrayList getUsername() {
+   *         return username;
+   *     }
+   * @param conflictingGetters
+   */
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
     for (Entry<String, List<Method>> entry : conflictingGetters.entrySet()) {
       //接口上一个方法
@@ -153,6 +163,7 @@ public class Reflector {
                 "Illegal overloaded getter method with ambiguous type for property "
                     + propName + " in class " + winner.getDeclaringClass()
                     + ". This breaks the JavaBeans specification and can cause unpredictable results.");
+            //是boolean类型并且方法名是以is开头，淘汰上一个方法
           } else if (candidate.getName().startsWith("is")) {
             winner = candidate;
           }
@@ -162,6 +173,7 @@ public class Reflector {
            */
         } else if (candidateType.isAssignableFrom(winnerType)) {
           // OK getter type is descendant
+          //抛弃类型大的方法，取到类型小的方法
         } else if (winnerType.isAssignableFrom(candidateType)) {
           winner = candidate;
         } else {
@@ -175,7 +187,7 @@ public class Reflector {
       addGetMethod(propName, winner);
     }
   }
-
+  //添加get方法进缓存
   private void addGetMethod(String name, Method method) {
     if (isValidPropertyName(name)) {
       getMethods.put(name, new MethodInvoker(method));
@@ -315,7 +327,7 @@ public class Reflector {
           // pr #16 - final static can only be set by the classloader
           //返回该字段的java语言修饰符
           int modifiers = field.getModifiers();
-          //该属性不是final并且不是static的，则添加进setMethod
+          //该属性不是final并且是static的，则添加进setMethod
           if (!(Modifier.isFinal(modifiers) && Modifier.isStatic(modifiers))) {
             addSetField(field);
           }

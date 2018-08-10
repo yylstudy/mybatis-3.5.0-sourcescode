@@ -56,7 +56,7 @@ public abstract class BaseExecutor implements Executor {
   protected Executor wrapper;
 
   protected ConcurrentLinkedQueue<DeferredLoad> deferredLoads;
-  //当前SqlSession 的缓存类
+  //当前SqlSession 的缓存类，这个应该就是mybatis的一级缓存类
   protected PerpetualCache localCache;
   //当前sqlSession的输出参数缓存
   protected PerpetualCache localOutputParameterCache;
@@ -110,12 +110,22 @@ public abstract class BaseExecutor implements Executor {
     return closed;
   }
 
+  /**
+   * 执行insert和update语句
+   * @param ms
+   * @param parameter 参数名和参数值的映射关系，Map<String,Object>
+   * @return
+   * @throws SQLException
+   */
   @Override
   public int update(MappedStatement ms, Object parameter) throws SQLException {
     ErrorContext.instance().resource(ms.getResource()).activity("executing an update").object(ms.getId());
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
+    /**
+     * 清空本地缓存，也就是一级缓存
+     */
     clearLocalCache();
     return doUpdate(ms, parameter);
   }

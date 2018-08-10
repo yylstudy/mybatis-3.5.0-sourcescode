@@ -36,12 +36,18 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
+
+/**
+ * 默认的ParameterHandler的实现
+ */
 public class DefaultParameterHandler implements ParameterHandler {
-
+  //typeHandler注册器
   private final TypeHandlerRegistry typeHandlerRegistry;
-
+  //mappedStatement
   private final MappedStatement mappedStatement;
+  //参数名和值得键值对
   private final Object parameterObject;
+  //要执行的sql对象
   private final BoundSql boundSql;
   private final Configuration configuration;
 
@@ -58,6 +64,10 @@ public class DefaultParameterHandler implements ParameterHandler {
     return parameterObject;
   }
 
+  /**
+   * 设置参数值
+   * @param ps
+   */
   @Override
   public void setParameters(PreparedStatement ps) {
     ErrorContext.instance().activity("setting parameters").object(mappedStatement.getParameterMap().getId());

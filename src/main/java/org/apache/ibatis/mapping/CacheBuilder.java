@@ -38,7 +38,7 @@ import org.apache.ibatis.reflection.SystemMetaObject;
  * @author Clinton Begin
  */
 public class CacheBuilder {
-  //dao的字符串
+  //当前mapper的nameSpace，也就是dao的地址
   private final String id;
   //缓存的实现类
   private Class<? extends Cache> implementation;
@@ -115,6 +115,7 @@ public class CacheBuilder {
         setCacheProperties(cache);
       }
       cache = setStandardDecorators(cache);
+      //若自定义的缓存类不是LoggingCache的子类，那么创建一个LoggingCache装饰类，用于统计缓存的命中率
     } else if (!LoggingCache.class.isAssignableFrom(cache.getClass())) {
       cache = new LoggingCache(cache);
     }
@@ -136,21 +137,32 @@ public class CacheBuilder {
     }
   }
 
+  /**
+   * 设置装饰属性值
+   * @param cache 装饰缓存类
+   * @return
+   */
   private Cache setStandardDecorators(Cache cache) {
     try {
       MetaObject metaCache = SystemMetaObject.forObject(cache);
+      //设置缓存的长度
       if (size != null && metaCache.hasSetter("size")) {
         metaCache.setValue("size", size);
       }
+      //若设置缓存刷新时间，那么再包一层装饰类 ScheduleCache，默认是一个小时刷新一次
       if (clearInterval != null) {
         cache = new ScheduledCache(cache);
         ((ScheduledCache) cache).setClearInterval(clearInterval);
       }
+      //若设置可序列化，则创建序列化缓存装饰类
       if (readWrite) {
         cache = new SerializedCache(cache);
       }
+      //创建logging缓存装饰类，统计缓存的命中率
       cache = new LoggingCache(cache);
+      //创建同步缓存装饰类，类方法都是同步的，以保证数据的线程安全性
       cache = new SynchronizedCache(cache);
+      //若是阻塞，那么创建阻塞缓存装饰类
       if (blocking) {
         cache = new BlockingCache(cache);
       }
@@ -160,6 +172,10 @@ public class CacheBuilder {
     }
   }
 
+  /**
+   * 校验缓存类属性（<cache> -> <property> 标签是否在缓存类中存在setter方法），并设置缓存类的属性
+   * @param cache
+   */
   private void setCacheProperties(Cache cache) {
     if (properties != null) {
       MetaObject metaCache = SystemMetaObject.forObject(cache);

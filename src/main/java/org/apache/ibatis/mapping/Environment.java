@@ -23,9 +23,9 @@ import org.apache.ibatis.transaction.TransactionFactory;
  * @author Clinton Begin
  */
 public final class Environment {
-  private final String id;
-  private final TransactionFactory transactionFactory;
-  private final DataSource dataSource;
+  private final String id;//enviornment的id
+  private final TransactionFactory transactionFactory;//事务工厂
+  private final DataSource dataSource;//数据源
 
   public Environment(String id, TransactionFactory transactionFactory, DataSource dataSource) {
     if (id == null) {

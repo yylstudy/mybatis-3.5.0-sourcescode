@@ -38,12 +38,16 @@ import org.apache.ibatis.io.Resources;
 public class UnpooledDataSource implements DataSource {
   
   private ClassLoader driverClassLoader;
+  //<datasource>标签下的property配置文件
   private Properties driverProperties;
   private static Map<String, Driver> registeredDrivers = new ConcurrentHashMap<>();
-
+  //驱动
   private String driver;
+  //url
   private String url;
+  //数据库用户名
   private String username;
+  //数据库密码
   private String password;
 
   private Boolean autoCommit;

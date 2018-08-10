@@ -27,7 +27,7 @@ import org.apache.ibatis.builder.BuilderException;
  * @author Clinton Begin
  */
 public class ExpressionEvaluator {
-
+    //解析boolean，判断其中表达式是否相等
   public boolean evaluateBoolean(String expression, Object parameterObject) {
     Object value = OgnlCache.getValue(expression, parameterObject);
     if (value instanceof Boolean) {

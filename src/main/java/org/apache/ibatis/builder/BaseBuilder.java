@@ -34,13 +34,14 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 public abstract class BaseBuilder {
   //配置类  XmlConfigBuilder 继承当前类，当前类拥有Configuration对象
   protected final Configuration configuration;
-  //别名注册器
+  //别名注册器，这个句柄和configuration上的typeAliasRegistry指向的是同一个对象
   protected final TypeAliasRegistry typeAliasRegistry;
-  //typeHandler注册器
+  //typeHandler注册器，这个句柄和configuration上的typeHandlerRegistry指向的是同一个对象
   protected final TypeHandlerRegistry typeHandlerRegistry;
 
   public BaseBuilder(Configuration configuration) {
     this.configuration = configuration;
+    //将configuration的 typeHandlerRegistry和TypeAliasRegistry绑定到上BaseBuilder
     this.typeAliasRegistry = this.configuration.getTypeAliasRegistry();
     this.typeHandlerRegistry = this.configuration.getTypeHandlerRegistry();
   }

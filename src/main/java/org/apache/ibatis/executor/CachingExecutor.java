@@ -36,6 +36,10 @@ import org.apache.ibatis.transaction.Transaction;
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
+
+/**
+ * 执行器装饰类
+ */
 public class CachingExecutor implements Executor {
 
   private final Executor delegate;
@@ -72,6 +76,10 @@ public class CachingExecutor implements Executor {
 
   @Override
   public int update(MappedStatement ms, Object parameterObject) throws SQLException {
+    /**
+     * 注意所谓的mybatis的一级、二级缓存的增删改去更新缓存，其实都是清空缓存的
+     * 所以这里是清空二级缓存？？？虽然我没看到哪里调用了cache.clear()方法？？？？？？？？？？
+     */
     flushCacheIfRequired(ms);
     return delegate.update(ms, parameterObject);
   }
@@ -161,6 +169,10 @@ public class CachingExecutor implements Executor {
     delegate.clearLocalCache();
   }
 
+  /**
+   * 刷新缓存
+   * @param ms
+   */
   private void flushCacheIfRequired(MappedStatement ms) {
     Cache cache = ms.getCache();
     if (cache != null && ms.isFlushCacheRequired()) {      

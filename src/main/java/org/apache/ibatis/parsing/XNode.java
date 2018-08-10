@@ -72,7 +72,13 @@ public class XNode {
     }
     return builder.toString();
   }
-  //获取基础id值
+
+  /**
+   * 获取<association><collection>的id值，大概格式就是
+   * [_resultMapId_[_collectionProperty]]
+   * @return
+   */
+
   public String getValueBasedIdentifier() {
     StringBuilder builder = new StringBuilder();
     XNode current = this;
@@ -80,6 +86,7 @@ public class XNode {
       if (current != this) {
         builder.insert(0, "_");
       }
+      //获取id，value，property的值
       String value = current.getStringAttribute("id",
           current.getStringAttribute("value",
               current.getStringAttribute("property", null)));

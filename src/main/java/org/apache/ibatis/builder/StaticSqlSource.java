@@ -25,9 +25,14 @@ import org.apache.ibatis.session.Configuration;
 /**
  * @author Clinton Begin
  */
-public class StaticSqlSource implements SqlSource {
 
+/**
+ * 创建一个静态的sqlSource
+ */
+public class StaticSqlSource implements SqlSource {
+  //sql语句
   private final String sql;
+  //参数列表
   private final List<ParameterMapping> parameterMappings;
   private final Configuration configuration;
 

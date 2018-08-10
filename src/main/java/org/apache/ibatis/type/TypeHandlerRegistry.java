@@ -377,9 +377,9 @@ public final class TypeHandlerRegistry {
 
   /**
    * 注册typeHandler
-   * @param type
-   * @param jdbcType
-   * @param handler
+   * @param type JavaType
+   * @param jdbcType JdbcType
+   * @param handler typeHandler实例
    * @param <T>
    */
   public <T> void register(Class<T> type, JdbcType jdbcType, TypeHandler<? extends T> handler) {
@@ -388,9 +388,9 @@ public final class TypeHandlerRegistry {
 
   /**
    * 注册typeHandler
-   * @param javaType
-   * @param jdbcType
-   * @param handler
+   * @param javaType JavaType
+   * @param jdbcType JdbcType
+   * @param handler typeHandler实例
    */
   private void register(Type javaType, JdbcType jdbcType, TypeHandler<?> handler) {
     if (javaType != null) {
@@ -444,7 +444,7 @@ public final class TypeHandlerRegistry {
 
   @SuppressWarnings("unchecked")
   /**
-   * 获取实例
+   * 获取实例，这里不会报错吗，自定义的typeHandler并没有String的构造参数？？？？？？？？？？？？？？
    */
   public <T> TypeHandler<T> getInstance(Class<?> javaTypeClass, Class<?> typeHandlerClass) {
     if (javaTypeClass != null) {

@@ -99,6 +99,11 @@ public class TypeAliasRegistry {
 
     registerAlias("ResultSet", ResultSet.class);
   }
+  public static void main(String[] args){
+    String string = "hahahah";
+    System.out.println(string.toLowerCase(Locale.ENGLISH));
+  }
+
 
   @SuppressWarnings("unchecked")
   // throws class cast exception as well if types cannot be assigned

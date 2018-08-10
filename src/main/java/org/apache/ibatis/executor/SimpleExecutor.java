@@ -40,12 +40,24 @@ public class SimpleExecutor extends BaseExecutor {
     super(configuration, transaction);
   }
 
+  /**
+   * 真正做update操作的地方
+   * @param ms
+   * @param parameter 参数名和参数值的映射关系，Map<String,Object>
+   * @return
+   * @throws SQLException
+   */
   @Override
   public int doUpdate(MappedStatement ms, Object parameter) throws SQLException {
     Statement stmt = null;
     try {
       Configuration configuration = ms.getConfiguration();
+      /**
+       * 创建一个StatementHandler，这是SqlSession下的四大对象之一
+       * 用于获取statement
+       */
       StatementHandler handler = configuration.newStatementHandler(this, ms, parameter, RowBounds.DEFAULT, null, null);
+      //获取一个Statement
       stmt = prepareStatement(handler, ms.getStatementLog());
       return handler.update(stmt);
     } finally {
@@ -78,10 +90,15 @@ public class SimpleExecutor extends BaseExecutor {
   public List<BatchResult> doFlushStatements(boolean isRollback) throws SQLException {
     return Collections.emptyList();
   }
-
+  //构建一个statement，用于数据查询
   private Statement prepareStatement(StatementHandler handler, Log statementLog) throws SQLException {
     Statement stmt;
+    //获取一个connection
     Connection connection = getConnection(statementLog);
+    /**
+     * 所以我们的分页拦截器是加在这个方法上的，StatementHandler，方法名为prepare
+     * 这个方法的目的是获取一个Statement，比如PreparedStatement
+     */
     stmt = handler.prepare(connection, transaction.getTimeout());
     handler.parameterize(stmt);
     return stmt;

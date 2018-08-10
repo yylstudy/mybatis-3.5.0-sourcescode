@@ -30,8 +30,9 @@ import org.apache.ibatis.reflection.property.PropertyTokenizer;
  * @author Clinton Begin
  */
 public class BeanWrapper extends BaseWrapper {
-
+  //真正对象，如datasource
   private final Object object;
+  //获取datasource的MetaClass,这个中包含datasource的反射器
   private final MetaClass metaClass;
 
   public BeanWrapper(MetaObject metaObject, Object object) {
@@ -104,7 +105,7 @@ public class BeanWrapper extends BaseWrapper {
       return metaClass.getGetterType(name);
     }
   }
-
+  //查看反射器中是否包含属性的setter方法
   @Override
   public boolean hasSetter(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
@@ -172,11 +173,19 @@ public class BeanWrapper extends BaseWrapper {
     }
   }
 
+  /**
+   * 设置值
+   * @param prop 包含key
+   * @param object 真正对象实例
+   * @param value 值
+   */
   private void setBeanProperty(PropertyTokenizer prop, Object object, Object value) {
     try {
+      //获取属性对应的set方法对象，Invoker是method的装饰对象
       Invoker method = metaClass.getSetInvoker(prop.getName());
       Object[] params = {value};
       try {
+        //设置值
         method.invoke(object, params);
       } catch (Throwable t) {
         throw ExceptionUtil.unwrapThrowable(t);

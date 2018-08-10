@@ -68,10 +68,14 @@ import java.util.Set;
  * @author Iwao AVE!
  * @author Kazuki Shimizu
  */
+
+/**
+ * 默认resultSetHandler的实现
+ */
 public class DefaultResultSetHandler implements ResultSetHandler {
 
   private static final Object DEFERED = new Object();
-
+  //执行器
   private final Executor executor;
   private final Configuration configuration;
   private final MappedStatement mappedStatement;

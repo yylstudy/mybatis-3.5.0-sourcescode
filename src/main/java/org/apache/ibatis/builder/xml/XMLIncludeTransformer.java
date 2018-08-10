@@ -63,32 +63,48 @@ public class XMLIncludeTransformer {
    */
   /**
    * 将<include>标签替换成对应的sql语句
+   * 这个过程差不多分为3步
+   * 1）将include标签替换成对应的<sql>标签
+   * 2）在sql标签之前添加对应的sql语句
+   * 3）删除sql标签
    * @param source
    * @param variablesContext 全局变量键值对
    * @param included
    */
   private void applyIncludes(Node source, final Properties variablesContext, boolean included) {
-    //解析include
+    //解析include，若节点名称为include
     if (source.getNodeName().equals("include")) {
       //根据refid查找包含的sql的Node节点，也就是<sql></sql>标签
       Node toInclude = findSqlFragment(getStringAttribute(source, "refid"), variablesContext);
-      //这里对<include>标签下的<property>元素解析，添加入configuration的变量键值对，并返回
+      /**
+       * 这里对<include>标签下的<property>元素解析，若为空直接返回，
+       * 不为空则解析成properties并添加configuration的变量键值对，然后返回
+       */
       Properties toIncludeContext = getVariablesContext(source, variablesContext);
+      //递归填充toInclude的值
       applyIncludes(toInclude, toIncludeContext, true);
       if (toInclude.getOwnerDocument() != source.getOwnerDocument()) {
         toInclude = source.getOwnerDocument().importNode(toInclude, true);
       }
-      //将include 替换成对应的包含sql的Node节点
-      //source.getParentNode()就是select、insert、update、delete
+      /**
+       * 将include 替换成对应的包含sql的Node节点
+       * source.getParentNode()就是select、insert、update、delete
+       */
       source.getParentNode().replaceChild(toInclude, source);
       while (toInclude.hasChildNodes()) {
-        //将sql语句插入到<sql>节点之前，需要注意的是：toInclude.getFirstChild()其实就是sql字符串
-        //对于DOM来说，文本也是一个节点
+        /**
+         * 将sql语句插入到<sql>节点之前，需要注意的是：toInclude.getFirstChild()其实就是sql字符串
+         * 对于DOM来说，文本也是一个节点
+         */
         toInclude.getParentNode().insertBefore(toInclude.getFirstChild(), toInclude);
       }
       //删除之前插入的<sql>节点
       toInclude.getParentNode().removeChild(toInclude);
+      /**
+       * 这里第二次进来应该是<sql>节点，所有会走里面逻辑
+       */
     } else if (source.getNodeType() == Node.ELEMENT_NODE) {
+      //若<include>下有propertis标签，则设置sql的值
       if (included && !variablesContext.isEmpty()) {
         // replace variables in attribute values
         NamedNodeMap attributes = source.getAttributes();
@@ -101,6 +117,7 @@ public class XMLIncludeTransformer {
       for (int i = 0; i < children.getLength(); i++) {
         applyIncludes(children.item(i), variablesContext, included);
       }
+      //第三次进来应该是sql的文本节点
     } else if (included && source.getNodeType() == Node.TEXT_NODE
         && !variablesContext.isEmpty()) {
       // replace variables in text node
@@ -138,14 +155,23 @@ public class XMLIncludeTransformer {
    * @param inheritedVariablesContext Current context used for replace variables in new variables values
    * @return variables context from include instance (no inherited values)
    */
+  /**
+   * 获取变量值
+   * @param node 节点
+   * @param inheritedVariablesContext 全局变量的Properties
+   * @return
+   */
   private Properties getVariablesContext(Node node, Properties inheritedVariablesContext) {
+    //当前标签下的property对应的properties对象
     Map<String, String> declaredProperties = null;
     NodeList children = node.getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
       Node n = children.item(i);
+      //若是子标签（因为Node的文本也是一个NodeType）
       if (n.getNodeType() == Node.ELEMENT_NODE) {
         String name = getStringAttribute(n, "name");
         // Replace variables inside
+        //从全局变量中获取值
         String value = PropertyParser.parse(getStringAttribute(n, "value"), inheritedVariablesContext);
         if (declaredProperties == null) {
           declaredProperties = new HashMap<>();
@@ -158,6 +184,7 @@ public class XMLIncludeTransformer {
     if (declaredProperties == null) {
       return inheritedVariablesContext;
     } else {
+      //当前标签下的变量properties和全局的合并，并返回
       Properties newProperties = new Properties();
       newProperties.putAll(inheritedVariablesContext);
       newProperties.putAll(declaredProperties);

@@ -40,11 +40,20 @@ public class Plugin implements InvocationHandler {
     this.signatureMap = signatureMap;
   }
 
+  /**
+   * 生成拦截器处理过得代理对象
+   * @param target 要被代理的对象
+   * @param interceptor 拦截器对象
+   * @return
+   */
   public static Object wrap(Object target, Interceptor interceptor) {
+    //获取拦截器注解上的值，封装成对象
     Map<Class<?>, Set<Method>> signatureMap = getSignatureMap(interceptor);
     Class<?> type = target.getClass();
+    //获取类符合的之前解析的签名Map的接口
     Class<?>[] interfaces = getAllInterfaces(type, signatureMap);
     if (interfaces.length > 0) {
+      //Jdk动态代理，生成target的代理对象
       return Proxy.newProxyInstance(
           type.getClassLoader(),
           interfaces,
@@ -53,11 +62,20 @@ public class Plugin implements InvocationHandler {
     return target;
   }
 
+  /**
+   * 拦截器真正的调用方法，这个方法是在拦截器的方法上调用的，而不是在mapper的方法，因为此时mapper方法肯定已经调用了
+   * @param proxy
+   * @param method
+   * @param args
+   * @return
+   * @throws Throwable
+   */
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     try {
       Set<Method> methods = signatureMap.get(method.getDeclaringClass());
       if (methods != null && methods.contains(method)) {
+        //这里才是调用拦截器真正的intercept方法的实现
         return interceptor.intercept(new Invocation(target, method, args));
       }
       return method.invoke(target, args);
@@ -67,17 +85,22 @@ public class Plugin implements InvocationHandler {
   }
 
   private static Map<Class<?>, Set<Method>> getSignatureMap(Interceptor interceptor) {
+    //获取拦截器上的@Intercepts的注解
     Intercepts interceptsAnnotation = interceptor.getClass().getAnnotation(Intercepts.class);
     // issue #251
     if (interceptsAnnotation == null) {
       throw new PluginException("No @Intercepts annotation was found in interceptor " + interceptor.getClass().getName());      
     }
+    //获取@Intercepts上的Signature的注解
     Signature[] sigs = interceptsAnnotation.value();
     Map<Class<?>, Set<Method>> signatureMap = new HashMap<>();
     for (Signature sig : sigs) {
+      //添加  @Signature注解的type值 sqlsession的四大对象之一
       Set<Method> methods = signatureMap.computeIfAbsent(sig.type(), k -> new HashSet<>());
       try {
+        //通过@Signature的type和args以及method构建出一个method对象
         Method method = sig.type().getMethod(sig.method(), sig.args());
+        //加入到集合中
         methods.add(method);
       } catch (NoSuchMethodException e) {
         throw new PluginException("Could not find method on " + sig.type() + " named " + sig.method() + ". Cause: " + e, e);

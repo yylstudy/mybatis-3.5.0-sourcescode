@@ -41,11 +41,16 @@ public class ResultMapping {
   private JdbcType jdbcType;
   //typeHandler
   private TypeHandler<?> typeHandler;
-  //association、collection的resultMap 元素的值
+  /**
+   * association、collection的resultMap 元素的值  这个resultMap就是<<association>、<collection>标签中
+   * 没有select的resultMap的id值，这个resultMap其实也是再configuration的resultMap缓存中
+   * 所有这个的在获取结果集的时候，肯定要判断这个，不为空时到缓存中获取这个对应的resultMap
+   */
   private String nestedResultMapId;
   //association、collection的select 元素的值
   private String nestedQueryId;
   private Set<String> notNullColumns;
+  //列名前缀
   private String columnPrefix;
   private List<ResultFlag> flags;
   private List<ResultMapping> composites;
