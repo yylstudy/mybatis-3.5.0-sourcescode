@@ -18,9 +18,16 @@ package org.apache.ibatis.scripting.xmltags;
 /**
  * @author Clinton Begin
  */
+
+/**
+ * if动态标签类
+ */
 public class IfSqlNode implements SqlNode {
+  //表达式解析器
   private final ExpressionEvaluator evaluator;
+  //test属性的值
   private final String test;
+  //MixedSqlNode，里面存有一个集合，包含各个子标签（包括文本）
   private final SqlNode contents;
 
   public IfSqlNode(SqlNode contents, String test) {
@@ -29,8 +36,14 @@ public class IfSqlNode implements SqlNode {
     this.evaluator = new ExpressionEvaluator();
   }
 
+  /**
+   * 拼接动态sql
+   * @param context
+   * @return
+   */
   @Override
   public boolean apply(DynamicContext context) {
+    //判断if表达式是否相等
     if (evaluator.evaluateBoolean(test, context.getBindings())) {
       contents.apply(context);
       return true;

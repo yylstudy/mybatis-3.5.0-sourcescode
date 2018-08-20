@@ -27,8 +27,15 @@ import org.apache.ibatis.builder.BuilderException;
  * @author Clinton Begin
  */
 public class ExpressionEvaluator {
-    //解析boolean，判断其中表达式是否相等
+    /**
+     * 解析boolean，判断其中表达式是否相等
+     * @param expression
+     * @param parameterObject ContextMap 其中有两个key 一个是_parameter 值是参数对象
+     * @return
+     */
+
   public boolean evaluateBoolean(String expression, Object parameterObject) {
+      //判断表达式是否正确
     Object value = OgnlCache.getValue(expression, parameterObject);
     if (value instanceof Boolean) {
       return (Boolean) value;

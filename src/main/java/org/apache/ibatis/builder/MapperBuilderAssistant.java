@@ -224,8 +224,10 @@ public class MapperBuilderAssistant extends BaseBuilder {
       //去除和继承的父类相同的ResultMappings
       extendedResultMappings.removeAll(resultMappings);
       // Remove parent constructor if this resultMap declares a constructor.
+      //<resultMap>标签是否存在<constructor>节点
       boolean declaresConstructor = false;
       for (ResultMapping resultMapping : resultMappings) {
+        //若当前包含<constructor>节点
         if (resultMapping.getFlags().contains(ResultFlag.CONSTRUCTOR)) {
           declaresConstructor = true;
           break;
@@ -234,6 +236,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
       if (declaresConstructor) {
         Iterator<ResultMapping> extendedResultMappingsIter = extendedResultMappings.iterator();
         while (extendedResultMappingsIter.hasNext()) {
+          //requestMapping是constructor节点，则从父中删除
           if (extendedResultMappingsIter.next().getFlags().contains(ResultFlag.CONSTRUCTOR)) {
             extendedResultMappingsIter.remove();
           }
@@ -368,20 +371,30 @@ public class MapperBuilderAssistant extends BaseBuilder {
     return value == null ? defaultValue : value;
   }
 
+  /**
+   * 获取参数Map
+   * @param parameterMapName 语句标签上的parameterMap的值
+   * @param parameterTypeClass 语句标签上 parameterType的Class对象
+   * @param statementId dao的方法名+"!selectKey"
+   * @return
+   */
   private ParameterMap getStatementParameterMap(
       String parameterMapName,
       Class<?> parameterTypeClass,
       String statementId) {
     parameterMapName = applyCurrentNamespace(parameterMapName, true);
     ParameterMap parameterMap = null;
+    //先解析paramterMap，这个不经常使用
     if (parameterMapName != null) {
       try {
         parameterMap = configuration.getParameterMap(parameterMapName);
       } catch (IllegalArgumentException e) {
         throw new IncompleteElementException("Could not find parameter map " + parameterMapName, e);
       }
+      //再解析parameterType，这个经常使用
     } else if (parameterTypeClass != null) {
       List<ParameterMapping> parameterMappings = new ArrayList<>();
+      //构建器模式创建parameterMap
       parameterMap = new ParameterMap.Builder(
           configuration,
           statementId + "-Inline",
@@ -435,7 +448,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
    * @param javaType 这个字段的返回类型
    * @param jdbcType
    * @param nestedSelect association、collection的select属性
-   * @param nestedResultMap  association、collection的 resultMap属性
+   * @param nestedResultMap  association、collection的 resultMap属性或者association、collection的select为空时的resultMap的id
    * @param notNullColumn
    * @param columnPrefix
    * @param typeHandler

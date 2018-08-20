@@ -43,7 +43,9 @@ public abstract class BaseStatementHandler implements StatementHandler {
   protected final ObjectFactory objectFactory;
   //typeHandler注册器
   protected final TypeHandlerRegistry typeHandlerRegistry;
+  //resultSetHandler，用于后面处理返回结果集的
   protected final ResultSetHandler resultSetHandler;
+  //parameterHandler，用于后面处理参数的
   protected final ParameterHandler parameterHandler;
   //执行器
   protected final Executor executor;
@@ -57,7 +59,8 @@ public abstract class BaseStatementHandler implements StatementHandler {
    * 构建一个基础的StatementHandler
    * @param executor
    * @param mappedStatement
-   * @param parameterObject 参数名和参数值的映射关系，Map<String,Object>
+   * @param parameterObject 参数名和参数值的映射关系，Map<String,Object>，
+   *      *                  若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身
    * @param rowBounds
    * @param resultHandler
    * @param boundSql
@@ -159,7 +162,7 @@ public abstract class BaseStatementHandler implements StatementHandler {
 
   /**
    * 允许JDBC自动生成主键
-   * @param parameter
+   * @param parameter 参数名和参数值的映射关系，Map<String,Object>
    */
   protected void generateKeys(Object parameter) {
     /**
@@ -170,6 +173,7 @@ public abstract class BaseStatementHandler implements StatementHandler {
      */
     KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
     ErrorContext.instance().store();
+    //处理selectKey或者其他主键生成策略
     keyGenerator.processBefore(executor, mappedStatement, null, parameter);
     ErrorContext.instance().recall();
   }

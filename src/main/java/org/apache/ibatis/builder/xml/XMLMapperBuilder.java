@@ -255,7 +255,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     if (context != null) {
       //获取type属性,如果type属性为空，就取值为PERPETUAL（PERPETUAL这个可以在别名注册器中获取PerpetualCache.class）
       String type = context.getStringAttribute("type", "PERPETUAL");
-      //获取自定义缓存的Class
+      //获取缓存的Class
       Class<? extends Cache> typeClass = typeAliasRegistry.resolveAlias(type);
       //获取缓存回收策略，LRU在别名注册器类对应的是LruCache
       String eviction = context.getStringAttribute("eviction", "LRU");
@@ -345,7 +345,10 @@ public class XMLMapperBuilder extends BaseBuilder {
      */
     String id = resultMapNode.getStringAttribute("id",
         resultMapNode.getValueBasedIdentifier());
-    //获取type值
+    /**
+     * 获取type值，如果是<collection>标签，那么就是获取ofType，如果是<association>
+     * 标签，那么就是javaType
+     */
     String type = resultMapNode.getStringAttribute("type",
         resultMapNode.getStringAttribute("ofType",
             resultMapNode.getStringAttribute("resultType",
@@ -470,18 +473,24 @@ public class XMLMapperBuilder extends BaseBuilder {
    * @throws Exception
    */
   private ResultMapping buildResultMappingFromContext(XNode context, Class<?> resultType, List<ResultFlag> flags) throws Exception {
+    //java属性名
     String property;
     if (flags.contains(ResultFlag.CONSTRUCTOR)) {
       property = context.getStringAttribute("name");
     } else {
       property = context.getStringAttribute("property");
     }
+    //列名
     String column = context.getStringAttribute("column");
+    //java类型
     String javaType = context.getStringAttribute("javaType");
+    //数据库类型
     String jdbcType = context.getStringAttribute("jdbcType");
+    //select属性值，主要用于联合查询
     String nestedSelect = context.getStringAttribute("select");
     /**
-     * 判断resultMap是否存在值，若是不存在，并且标签为 association、collection、case，则进行解析
+     * 返回resultMap的id，若是不存在，并且标签为 association、collection、case，并且select元素为空
+     * 则进行递归解析并返回resultMap的id
      */
     String nestedResultMap = context.getStringAttribute("resultMap",
         processNestedResultMappings(context, Collections.<ResultMapping> emptyList()));
@@ -502,7 +511,7 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   /**
-   * 解析association、collection、case下的子标签（也就是不存在select节点）
+   * 解析association、collection、case下的子标签（也就是不存在select属性）
    * @param context
    * @param resultMappings
    * @return

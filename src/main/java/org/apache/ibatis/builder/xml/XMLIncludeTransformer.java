@@ -91,7 +91,7 @@ public class XMLIncludeTransformer {
        * source.getParentNode()就是select、insert、update、delete
        */
       source.getParentNode().replaceChild(toInclude, source);
-      while (toInclude.hasChildNodes()) {
+        while (toInclude.hasChildNodes()) {
         /**
          * 将sql语句插入到<sql>节点之前，需要注意的是：toInclude.getFirstChild()其实就是sql字符串
          * 对于DOM来说，文本也是一个节点

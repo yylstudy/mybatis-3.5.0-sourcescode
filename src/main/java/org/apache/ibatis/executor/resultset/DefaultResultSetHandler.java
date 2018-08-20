@@ -80,6 +80,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   private final Configuration configuration;
   private final MappedStatement mappedStatement;
   private final RowBounds rowBounds;
+  //四大对象之一
   private final ParameterHandler parameterHandler;
   private final ResultHandler<?> resultHandler;
   private final BoundSql boundSql;
@@ -88,7 +89,11 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   private final ReflectorFactory reflectorFactory;
 
   // nested resultmaps
+  /**这个应该是存放resultMap的缓存key（这个由resultMapId、columnName、columnValue决定）和 列上resultMap的映射关系 */
   private final Map<CacheKey, Object> nestedResultObjects = new HashMap<>();
+  /** 存放  dao类名+"."+resultMapId  ->>>resultMapping上的 resultMap对象的映射关系， 这个在解析resultMapping
+   * 上的resultMap后马上移除
+   * */
   private final Map<String, Object> ancestorObjects = new HashMap<>();
   private Object previousRowValue;
 
@@ -100,6 +105,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   private final Map<String, List<UnMappedColumnAutoMapping>> autoMappingsCache = new HashMap<>();
 
   // temporary marking flag that indicate using constructor mapping (use field to reduce memory usage)
+  //是否使用构造函数构造Mapping
   private boolean useConstructorMappings;
 
   private static class PendingRelation {
@@ -181,20 +187,30 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   //
   // HANDLE RESULT SETS
   //
+
+  /**
+   * 封装statement的返回结果集
+   * @param stmt
+   * @return
+   * @throws SQLException
+   */
   @Override
   public List<Object> handleResultSets(Statement stmt) throws SQLException {
     ErrorContext.instance().activity("handling results").object(mappedStatement.getId());
-
+    //存放返回结果集
     final List<Object> multipleResults = new ArrayList<>();
 
     int resultSetCount = 0;
     ResultSetWrapper rsw = getFirstResultSet(stmt);
-
+    //获取mappedStatement所有的resultMap集合，通常一个mappedStatement只有一个resultMap，也就是那个设置的值
     List<ResultMap> resultMaps = mappedStatement.getResultMaps();
     int resultMapCount = resultMaps.size();
+    //校验resultMap数量和返回结果集是否冲突
     validateResultMapsCount(rsw, resultMapCount);
+    //遍历resultMap
     while (rsw != null && resultMapCount > resultSetCount) {
       ResultMap resultMap = resultMaps.get(resultSetCount);
+      //处理resultSet
       handleResultSet(rsw, resultMap, multipleResults, null);
       rsw = getNextResultSet(stmt);
       cleanUpAfterHandlingResultSet();
@@ -237,6 +253,12 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return new DefaultCursor<>(this, resultMap, rsw, rowBounds);
   }
 
+  /**
+   * 获取resultSet
+   * @param stmt
+   * @return
+   * @throws SQLException
+   */
   private ResultSetWrapper getFirstResultSet(Statement stmt) throws SQLException {
     ResultSet rs = stmt.getResultSet();
     while (rs == null) {
@@ -295,13 +317,23 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     }
   }
 
+  /**
+   * 处理resultSet
+   * @param rsw resultSet的封装类
+   * @param resultMap 返回结果集
+   * @param multipleResults
+   * @param parentMapping null
+   * @throws SQLException
+   */
   private void handleResultSet(ResultSetWrapper rsw, ResultMap resultMap, List<Object> multipleResults, ResultMapping parentMapping) throws SQLException {
     try {
       if (parentMapping != null) {
         handleRowValues(rsw, resultMap, null, RowBounds.DEFAULT, parentMapping);
       } else {
         if (resultHandler == null) {
+          //创建一个resultHandler，这个对象是封装了一个空结果集，用于存放返回结果
           DefaultResultHandler defaultResultHandler = new DefaultResultHandler(objectFactory);
+          //处理每行的值
           handleRowValues(rsw, resultMap, defaultResultHandler, rowBounds, null);
           multipleResults.add(defaultResultHandler.getResultList());
         } else {
@@ -323,12 +355,23 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   // HANDLE ROWS FOR SIMPLE RESULTMAP
   //
 
+  /**
+   * 处理行值
+   * @param rsw resultSet的封装类
+   * @param resultMap 结果集
+   * @param resultHandler
+   * @param rowBounds
+   * @param parentMapping
+   * @throws SQLException
+   */
   public void handleRowValues(ResultSetWrapper rsw, ResultMap resultMap, ResultHandler<?> resultHandler, RowBounds rowBounds, ResultMapping parentMapping) throws SQLException {
     if (resultMap.hasNestedResultMaps()) {
       ensureNoRowBounds();
       checkResultHandler();
+      //对于association、collection的包含resultMap或者不包含select元素的解析行值
       handleRowValuesForNestedResultMap(rsw, resultMap, resultHandler, rowBounds, parentMapping);
     } else {
+      //对于association、collection的可能包含select元素的解析行值
       handleRowValuesForSimpleResultMap(rsw, resultMap, resultHandler, rowBounds, parentMapping);
     }
   }
@@ -377,6 +420,12 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return !context.isStopped() && context.getResultCount() < rowBounds.getLimit();
   }
 
+  /**
+   * 跳过行
+   * @param rs
+   * @param rowBounds
+   * @throws SQLException
+   */
   private void skipRows(ResultSet rs, RowBounds rowBounds) throws SQLException {
     if (rs.getType() != ResultSet.TYPE_FORWARD_ONLY) {
       if (rowBounds.getOffset() != RowBounds.NO_ROW_OFFSET) {
@@ -393,6 +442,14 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   // GET VALUE FROM ROW FOR SIMPLE RESULT MAP
   //
 
+  /**
+   * 获取行值
+   * @param rsw 包含resultSet对象
+   * @param resultMap
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private Object getRowValue(ResultSetWrapper rsw, ResultMap resultMap, String columnPrefix) throws SQLException {
     final ResultLoaderMap lazyLoader = new ResultLoaderMap();
     Object rowValue = createResultObject(rsw, resultMap, lazyLoader, columnPrefix);
@@ -425,13 +482,26 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   // PROPERTY MAPPINGS
   //
 
+  /**
+   * 解析propertyResultMapping
+   * @param rsw
+   * @param resultMap
+   * @param metaObject
+   * @param lazyLoader
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private boolean applyPropertyMappings(ResultSetWrapper rsw, ResultMap resultMap, MetaObject metaObject, ResultLoaderMap lazyLoader, String columnPrefix)
       throws SQLException {
+    //获取<resultMap>中列名能和resultSet对应上的字段集合
     final List<String> mappedColumnNames = rsw.getMappedColumnNames(resultMap, columnPrefix);
     boolean foundValues = false;
+    //获取propertyResultMapping集合
     final List<ResultMapping> propertyMappings = resultMap.getPropertyResultMappings();
     for (ResultMapping propertyMapping : propertyMappings) {
       String column = prependPrefix(propertyMapping.getColumn(), columnPrefix);
+      //排除association、collection的resultMap
       if (propertyMapping.getNestedResultMapId() != null) {
         // the user added a column attribute to a nested result map, ignore it
         column = null;
@@ -439,6 +509,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       if (propertyMapping.isCompositeResult()
           || (column != null && mappedColumnNames.contains(column.toUpperCase(Locale.ENGLISH)))
           || propertyMapping.getResultSet() != null) {
+        //获取propertyResultMapping的值
         Object value = getPropertyMappingValue(rsw.getResultSet(), metaObject, propertyMapping, lazyLoader, columnPrefix);
         // issue #541 make property optional
         final String property = propertyMapping.getProperty();
@@ -451,6 +522,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
         if (value != null) {
           foundValues = true;
         }
+        //值不为空，则设置值
         if (value != null || (configuration.isCallSettersOnNulls() && !metaObject.getSetterType(property).isPrimitive())) {
           // gcode issue #377, call setter on nulls (value is not 'found')
           metaObject.setValue(property, value);
@@ -460,14 +532,26 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return foundValues;
   }
 
+  /**
+   * 获取普通属性的值
+   * @param rs
+   * @param metaResultObject
+   * @param propertyMapping
+   * @param lazyLoader
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private Object getPropertyMappingValue(ResultSet rs, MetaObject metaResultObject, ResultMapping propertyMapping, ResultLoaderMap lazyLoader, String columnPrefix)
       throws SQLException {
     if (propertyMapping.getNestedQueryId() != null) {
+      //association、collection的select 元素的有值
       return getNestedQueryMappingValue(rs, metaResultObject, propertyMapping, lazyLoader, columnPrefix);
     } else if (propertyMapping.getResultSet() != null) {
       addPendingChildRelation(rs, metaResultObject, propertyMapping);   // TODO is that OK?
       return DEFERED;
     } else {
+      //普通列
       final TypeHandler<?> typeHandler = propertyMapping.getTypeHandler();
       final String column = prependPrefix(propertyMapping.getColumn(), columnPrefix);
       return typeHandler.getResult(rs, column);
@@ -585,15 +669,35 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   // INSTANTIATION & CONSTRUCTOR MAPPING
   //
 
+  /**
+   * 创建result的javaBean，用于存放每行的值
+   * @param rsw
+   * @param resultMap
+   * @param lazyLoader
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private Object createResultObject(ResultSetWrapper rsw, ResultMap resultMap, ResultLoaderMap lazyLoader, String columnPrefix) throws SQLException {
     this.useConstructorMappings = false; // reset previous mapping result
+    //构造参数类型
     final List<Class<?>> constructorArgTypes = new ArrayList<>();
+    //构造参数
     final List<Object> constructorArgs = new ArrayList<>();
+    //创建result的javaBean，（存在构造器就使用构造器，否则默认构造器反射）
+    // 这个方法值解析constructorResultMapping
     Object resultObject = createResultObject(rsw, resultMap, constructorArgTypes, constructorArgs, columnPrefix);
     if (resultObject != null && !hasTypeHandlerForResultObject(rsw, resultMap.getType())) {
+      //获取属性的resultMapping
       final List<ResultMapping> propertyMappings = resultMap.getPropertyResultMappings();
       for (ResultMapping propertyMapping : propertyMappings) {
-        // issue gcode #109 && issue #149
+        /**
+         * 如果collection、association对象上的select不为空，
+         * 并且select是懒加载，则创建具有延迟加载能力的代理对象JavassistProxyFactory
+         * 为什么要循环全部呢，感觉是因为默认懒加载是层级的懒加载，只要这个resultMap中有一个懒加载，那么其他的select
+         * 都是懒加载的。这也是这里要break的原因吧
+         * ，
+         */
         if (propertyMapping.getNestedQueryId() != null && propertyMapping.isLazy()) {
           resultObject = configuration.getProxyFactory().createProxy(resultObject, lazyLoader, configuration, objectFactory, constructorArgTypes, constructorArgs);
           break;
@@ -604,15 +708,29 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return resultObject;
   }
 
+  /**
+   * 创建result的javaBean（已经赋值了）
+   * @param rsw
+   * @param resultMap
+   * @param constructorArgTypes 构造参数类型集合
+   * @param constructorArgs 构造参数集合
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private Object createResultObject(ResultSetWrapper rsw, ResultMap resultMap, List<Class<?>> constructorArgTypes, List<Object> constructorArgs, String columnPrefix)
       throws SQLException {
     final Class<?> resultType = resultMap.getType();
+    //获取resultMap 对应的java类型的MetaClass
     final MetaClass metaType = MetaClass.forClass(resultType, reflectorFactory);
     final List<ResultMapping> constructorMappings = resultMap.getConstructorResultMappings();
+    //若有typeHandler，这个应该是简单类型的resultMap，应该是很少使用
     if (hasTypeHandlerForResultObject(rsw, resultType)) {
       return createPrimitiveResultObject(rsw, resultMap, columnPrefix);
+      //若constructor标签不为空，则解析
     } else if (!constructorMappings.isEmpty()) {
       return createParameterizedResultObject(rsw, resultType, constructorMappings, constructorArgTypes, constructorArgs, columnPrefix);
+    //这个应该就是生成没有constructor标签的javaBean对象
     } else if (resultType.isInterface() || metaType.hasDefaultConstructor()) {
       return objectFactory.create(resultType);
     } else if (shouldApplyAutomaticMappings(resultMap, false)) {
@@ -621,20 +739,38 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     throw new ExecutorException("Do not know how to create an instance of " + resultType);
   }
 
+  /**
+   *  构造结果
+   * @param rsw
+   * @param resultType resultMap的java类型
+   * @param constructorMappings 构造器resultMapping集合
+   * @param constructorArgTypes 构造参数类型集合
+   * @param constructorArgs 构造参数集合
+   * @param columnPrefix
+   * @return
+   */
   Object createParameterizedResultObject(ResultSetWrapper rsw, Class<?> resultType, List<ResultMapping> constructorMappings,
                                          List<Class<?>> constructorArgTypes, List<Object> constructorArgs, String columnPrefix) {
     boolean foundValues = false;
+    //遍历constructor标签
     for (ResultMapping constructorMapping : constructorMappings) {
+      //resultMapping的java类型
       final Class<?> parameterType = constructorMapping.getJavaType();
+      //获取列名
       final String column = constructorMapping.getColumn();
       final Object value;
       try {
+        //association、collection的select 元素的值 不为空
         if (constructorMapping.getNestedQueryId() != null) {
+          //返回association、collection的select的值
           value = getNestedQueryConstructorValue(rsw.getResultSet(), constructorMapping, columnPrefix);
+          //association、collection的resultMap
         } else if (constructorMapping.getNestedResultMapId() != null) {
           final ResultMap resultMap = configuration.getResultMap(constructorMapping.getNestedResultMapId());
+          //获取这个resultMap的值
           value = getRowValue(rsw, resultMap, constructorMapping.getColumnPrefix());
         } else {
+          //若是普通列，直接获取typeHandler进行转化
           final TypeHandler<?> typeHandler = constructorMapping.getTypeHandler();
           value = typeHandler.getResult(rsw.getResultSet(), prependPrefix(column, columnPrefix));
         }
@@ -645,6 +781,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       constructorArgs.add(value);
       foundValues = value != null || foundValues;
     }
+    //构建返回result 的JavaBean，并赋值
     return foundValues ? objectFactory.create(resultType, constructorArgTypes, constructorArgs) : null;
   }
 
@@ -679,7 +816,9 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   private Constructor<?> findDefaultConstructor(final Constructor<?>[] constructors) {
-    if (constructors.length == 1) return constructors[0];
+    if (constructors.length == 1) {
+      return constructors[0];
+    }
 
     for (final Constructor<?> constructor : constructors) {
       if (constructor.isAnnotationPresent(AutomapConstructor.class)) {
@@ -718,26 +857,53 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   // NESTED QUERY
   //
 
+  /**
+   * 返回association、collection的select的值
+   * @param rs resultSet
+   * @param constructorMapping resultMapping集合
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private Object getNestedQueryConstructorValue(ResultSet rs, ResultMapping constructorMapping, String columnPrefix) throws SQLException {
     final String nestedQueryId = constructorMapping.getNestedQueryId();
+    //获取association、collection对应的select对应的mappedStatement
     final MappedStatement nestedQuery = configuration.getMappedStatement(nestedQueryId);
+    //select对应的参数类型
     final Class<?> nestedQueryParameterType = nestedQuery.getParameterMap().getType();
+    /** 为 association、collection的select准备参数，也就是获取association、collection对应column对应的值*/
     final Object nestedQueryParameterObject = prepareParameterForNestedQuery(rs, constructorMapping, nestedQueryParameterType, columnPrefix);
     Object value = null;
+    //若association、collection的select参数值不为空
     if (nestedQueryParameterObject != null) {
+      //获取association、collection对应的select 的BoundSql对象
       final BoundSql nestedBoundSql = nestedQuery.getBoundSql(nestedQueryParameterObject);
+      //创建缓存key
       final CacheKey key = executor.createCacheKey(nestedQuery, nestedQueryParameterObject, RowBounds.DEFAULT, nestedBoundSql);
+      //获取association、collection对应的select的java类型
       final Class<?> targetType = constructorMapping.getJavaType();
       final ResultLoader resultLoader = new ResultLoader(configuration, executor, nestedQuery, nestedQueryParameterObject, targetType, key, nestedBoundSql);
+      //获取association、collection对应的select的值，内部递归调用query方法
       value = resultLoader.loadResult();
     }
     return value;
   }
 
+  /**
+   * association、collection的select 元素的有值
+   * @param rs
+   * @param metaResultObject
+   * @param propertyMapping
+   * @param lazyLoader
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private Object getNestedQueryMappingValue(ResultSet rs, MetaObject metaResultObject, ResultMapping propertyMapping, ResultLoaderMap lazyLoader, String columnPrefix)
       throws SQLException {
     final String nestedQueryId = propertyMapping.getNestedQueryId();
     final String property = propertyMapping.getProperty();
+    //association、collection的select对应的MappedStatement
     final MappedStatement nestedQuery = configuration.getMappedStatement(nestedQueryId);
     final Class<?> nestedQueryParameterType = nestedQuery.getParameterMap().getType();
     final Object nestedQueryParameterObject = prepareParameterForNestedQuery(rs, propertyMapping, nestedQueryParameterType, columnPrefix);
@@ -762,6 +928,15 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return value;
   }
 
+  /**
+   * 为 association、collection的select准备参数，也就是获取association、collection对应column对应的值
+   * @param rs
+   * @param resultMapping
+   * @param parameterType select对应的参数类型
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private Object prepareParameterForNestedQuery(ResultSet rs, ResultMapping resultMapping, Class<?> parameterType, String columnPrefix) throws SQLException {
     if (resultMapping.isCompositeResult()) {
       return prepareCompositeKeyParameter(rs, resultMapping, parameterType, columnPrefix);
@@ -770,6 +945,15 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     }
   }
 
+  /**
+   * 为 association、collection的select准备参数，也就是获取association、collection对应column对应的值
+   * @param rs
+   * @param resultMapping
+   * @param parameterType select对应的参数类型
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private Object prepareSimpleKeyParameter(ResultSet rs, ResultMapping resultMapping, Class<?> parameterType, String columnPrefix) throws SQLException {
     final TypeHandler<?> typeHandler;
     if (typeHandlerRegistry.hasTypeHandler(parameterType)) {
@@ -777,6 +961,10 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     } else {
       typeHandler = typeHandlerRegistry.getUnknownTypeHandler();
     }
+    /**
+     * resultMapping.getColumn()这个方法可以看出  association、collection需要关联参数  如column="id"
+     * 获取对应列的值，若列上有typeHandler，则进行相应的处理
+     */
     return typeHandler.getResult(rs, prependPrefix(resultMapping.getColumn(), columnPrefix));
   }
 
@@ -811,6 +999,14 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   // DISCRIMINATOR
   //
 
+  /**
+   * 解析 resultMap的Discriminated
+   * @param rs resultSet
+   * @param resultMap
+   * @param columnPrefix null
+   * @return
+   * @throws SQLException
+   */
   public ResultMap resolveDiscriminatedResultMap(ResultSet rs, ResultMap resultMap, String columnPrefix) throws SQLException {
     Set<String> pastDiscriminators = new HashSet<>();
     Discriminator discriminator = resultMap.getDiscriminator();
@@ -848,12 +1044,23 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   // HANDLE NESTED RESULT MAPS
   //
 
+  /**
+   * //对于association、collection的包含resultMap元素的解析行值
+   * @param rsw resultSet的封装类
+   * @param resultMap
+   * @param resultHandler
+   * @param rowBounds
+   * @param parentMapping
+   * @throws SQLException
+   */
   private void handleRowValuesForNestedResultMap(ResultSetWrapper rsw, ResultMap resultMap, ResultHandler<?> resultHandler, RowBounds rowBounds, ResultMapping parentMapping) throws SQLException {
     final DefaultResultContext<Object> resultContext = new DefaultResultContext<>();
     skipRows(rsw.getResultSet(), rowBounds);
     Object rowValue = previousRowValue;
     while (shouldProcessMoreRows(resultContext, rowBounds) && rsw.getResultSet().next()) {
+      //处理discriminated（没看）
       final ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(rsw.getResultSet(), resultMap, null);
+      //为这行记录生成一个key，createRowKey会利用resultMapping来生成key
       final CacheKey rowKey = createRowKey(discriminatedResultMap, rsw, null);
       Object partialObject = nestedResultObjects.get(rowKey);
       // issue #577 && #542
@@ -866,6 +1073,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       } else {
         rowValue = getRowValue(rsw, discriminatedResultMap, rowKey, null, partialObject);
         if (partialObject == null) {
+          //将返回值添加进DefaultResultHandler中的list对象
           storeObject(resultHandler, resultContext, rowValue, parentMapping, rsw.getResultSet());
         }
       }
@@ -882,6 +1090,16 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   // GET VALUE FROM ROW FOR NESTED RESULT MAP
   //
 
+  /**
+   * 获取行值
+   * @param rsw resultSet的包装类
+   * @param resultMap
+   * @param combinedKey 前面计算出来的缓存key
+   * @param columnPrefix
+   * @param partialObject
+   * @return
+   * @throws SQLException
+   */
   private Object getRowValue(ResultSetWrapper rsw, ResultMap resultMap, CacheKey combinedKey, String columnPrefix, Object partialObject) throws SQLException {
     final String resultMapId = resultMap.getId();
     Object rowValue = partialObject;
@@ -891,16 +1109,21 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       applyNestedResultMappings(rsw, resultMap, metaObject, columnPrefix, combinedKey, false);
       ancestorObjects.remove(resultMapId);
     } else {
+      //第一次进来这个值应该是空的
       final ResultLoaderMap lazyLoader = new ResultLoaderMap();
+      //创建每行的对象，也就是值
       rowValue = createResultObject(rsw, resultMap, lazyLoader, columnPrefix);
       if (rowValue != null && !hasTypeHandlerForResultObject(rsw, resultMap.getType())) {
+        //创建值对象的MetaObject对象
         final MetaObject metaObject = configuration.newMetaObject(rowValue);
         boolean foundValues = this.useConstructorMappings;
         if (shouldApplyAutomaticMappings(resultMap, true)) {
           foundValues = applyAutomaticMappings(rsw, resultMap, metaObject, columnPrefix) || foundValues;
         }
+        //解析propertyResultMapping，填充上面创建出来的rowValue值
         foundValues = applyPropertyMappings(rsw, resultMap, metaObject, lazyLoader, columnPrefix) || foundValues;
         putAncestor(rowValue, resultMapId);
+        //解析association、collection的resultMap，填充rowValue的值
         foundValues = applyNestedResultMappings(rsw, resultMap, metaObject, columnPrefix, combinedKey, true) || foundValues;
         ancestorObjects.remove(resultMapId);
         foundValues = lazyLoader.size() > 0 || foundValues;
@@ -921,6 +1144,16 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   // NESTED RESULT MAP (JOIN MAPPING)
   //
 
+  /**
+   * //解析association、collection的resultMap，填充rowValue的值
+   * @param rsw
+   * @param resultMap
+   * @param metaObject  解析生成的结果集对象
+   * @param parentPrefix
+   * @param parentRowKey
+   * @param newObject
+   * @return
+   */
   private boolean applyNestedResultMappings(ResultSetWrapper rsw, ResultMap resultMap, MetaObject metaObject, String parentPrefix, CacheKey parentRowKey, boolean newObject) {
     boolean foundValues = false;
     for (ResultMapping resultMapping : resultMap.getPropertyResultMappings()) {
@@ -940,10 +1173,13 @@ public class DefaultResultSetHandler implements ResultSetHandler {
               continue;
             }
           }
+          //创建缓存key
           final CacheKey rowKey = createRowKey(nestedResultMap, rsw, columnPrefix);
           final CacheKey combinedKey = combineKeys(rowKey, parentRowKey);
+          //从缓存中获取，nestedResultObjects这个是在解析构造器的时候已经解析过了
           Object rowValue = nestedResultObjects.get(combinedKey);
           boolean knownValue = rowValue != null;
+          //resultMap对应的Java类型是集合子类，那么就创建用于承载resultMap的集合对象
           instantiateCollectionPropertyIfAppropriate(resultMapping, metaObject); // mandatory
           if (anyNotNullColumnHasValue(resultMapping, columnPrefix, rsw)) {
             rowValue = getRowValue(rsw, nestedResultMap, combinedKey, columnPrefix, rowValue);
@@ -1005,6 +1241,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   private CacheKey createRowKey(ResultMap resultMap, ResultSetWrapper rsw, String columnPrefix) throws SQLException {
     final CacheKey cacheKey = new CacheKey();
     cacheKey.update(resultMap.getId());
+    //获取resultMap的idResultMapping集合，若不存在就获取propertyResultMapping
     List<ResultMapping> resultMappings = getResultMappingsForRowKey(resultMap);
     if (resultMappings.isEmpty()) {
       if (Map.class.isAssignableFrom(resultMap.getType())) {
@@ -1043,20 +1280,39 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return resultMappings;
   }
 
+  /**
+   * 为mappedStatement的配置创建行key
+   * @param resultMap
+   * @param rsw 包含resultSet对象
+   * @param cacheKey 缓存key
+   * @param resultMappings resultMap下的resultMapping集合
+   * @param columnPrefix
+   * @throws SQLException
+   */
   private void createRowKeyForMappedProperties(ResultMap resultMap, ResultSetWrapper rsw, CacheKey cacheKey, List<ResultMapping> resultMappings, String columnPrefix) throws SQLException {
     for (ResultMapping resultMapping : resultMappings) {
+      //若是当前resultMap中包含collection、association节点（没有select属性），并且result属性为空
       if (resultMapping.getNestedResultMapId() != null && resultMapping.getResultSet() == null) {
         // Issue #392
+        //那么从configuration中获取这个resultMapping中包含的resultMap
         final ResultMap nestedResultMap = configuration.getResultMap(resultMapping.getNestedResultMapId());
+        //递归调用创建行key
         createRowKeyForMappedProperties(nestedResultMap, rsw, cacheKey, nestedResultMap.getConstructorResultMappings(),
             prependPrefix(resultMapping.getColumnPrefix(), columnPrefix));
+        //association、collection的select 元素的值，就说明这个resultMapping是简单的列，没有级联查询的属性什么的
       } else if (resultMapping.getNestedQueryId() == null) {
+        //返回列名
         final String column = prependPrefix(resultMapping.getColumn(), columnPrefix);
+        //获取这个resultMapping的typeHandler实例
         final TypeHandler<?> th = resultMapping.getTypeHandler();
+        //获取resultMap能和resultSet对应上的列名集合
         List<String> mappedColumnNames = rsw.getMappedColumnNames(resultMap, columnPrefix);
         // Issue #114
+        //当前resuestMapping的列名存在于  resultMap能和resultSet对应上的列名集合
         if (column != null && mappedColumnNames.contains(column.toUpperCase(Locale.ENGLISH))) {
+          //根据列名从resultSet中获取值
           final Object value = th.getResult(rsw.getResultSet(), column);
+          //值不为空，更新缓存key
           if (value != null || configuration.isReturnInstanceForEmptyRow()) {
             cacheKey.update(column);
             cacheKey.update(value);
@@ -1101,21 +1357,33 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   private void linkObjects(MetaObject metaObject, ResultMapping resultMapping, Object rowValue) {
+    //resultMap对应的Java类型是集合子类，那么就创建用于承载resultMap的集合对象
     final Object collectionProperty = instantiateCollectionPropertyIfAppropriate(resultMapping, metaObject);
     if (collectionProperty != null) {
       final MetaObject targetMetaObject = configuration.newMetaObject(collectionProperty);
+      //若是集合添加进集合
       targetMetaObject.add(rowValue);
     } else {
+      //否则直接设置值到对应属性
       metaObject.setValue(resultMapping.getProperty(), rowValue);
     }
   }
 
+  /**
+   * resultMap对应的Java类型是集合子类，那么就创建用于承载resultMap的集合对象
+   * @param resultMapping
+   * @param metaObject
+   * @return
+   */
   private Object instantiateCollectionPropertyIfAppropriate(ResultMapping resultMapping, MetaObject metaObject) {
     final String propertyName = resultMapping.getProperty();
+    //获取resultMapping上resultMap的值，一般为空
     Object propertyValue = metaObject.getValue(propertyName);
     if (propertyValue == null) {
+      //java类型
       Class<?> type = resultMapping.getJavaType();
       if (type == null) {
+        //java类型为空，反射获取java类型
         type = metaObject.getSetterType(propertyName);
       }
       try {

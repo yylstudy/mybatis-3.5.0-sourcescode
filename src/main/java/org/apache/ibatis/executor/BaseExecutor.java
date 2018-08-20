@@ -113,7 +113,8 @@ public abstract class BaseExecutor implements Executor {
   /**
    * 执行insert和update语句
    * @param ms
-   * @param parameter 参数名和参数值的映射关系，Map<String,Object>
+   * @param parameter 参数名和参数值的映射关系，Map<String,Object>，
+   *      *                  若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身
    * @return
    * @throws SQLException
    */
@@ -162,10 +163,12 @@ public abstract class BaseExecutor implements Executor {
     List<E> list;
     try {
       queryStack++;
+      //尝试从一级缓存中获取数据
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
       if (list != null) {
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
       } else {
+        //从数据库中查询
         list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);
       }
     } finally {
@@ -204,6 +207,15 @@ public abstract class BaseExecutor implements Executor {
     }
   }
 
+  /**
+   * 创建缓存key，可以看到缓存key由几个对象决定
+   * 方法名+sql+参数值+enviornment
+   * @param ms mappedStatememnt
+   * @param parameterObject  参数对象
+   * @param rowBounds RowBounds
+   * @param boundSql
+   * @return
+   */
   @Override
   public CacheKey createCacheKey(MappedStatement ms, Object parameterObject, RowBounds rowBounds, BoundSql boundSql) {
     if (closed) {
@@ -220,7 +232,9 @@ public abstract class BaseExecutor implements Executor {
     for (ParameterMapping parameterMapping : parameterMappings) {
       if (parameterMapping.getMode() != ParameterMode.OUT) {
         Object value;
+        //获取属性key值
         String propertyName = parameterMapping.getProperty();
+        //
         if (boundSql.hasAdditionalParameter(propertyName)) {
           value = boundSql.getAdditionalParameter(propertyName);
         } else if (parameterObject == null) {
@@ -229,6 +243,7 @@ public abstract class BaseExecutor implements Executor {
           value = parameterObject;
         } else {
           MetaObject metaObject = configuration.newMetaObject(parameterObject);
+          //获取key对应的值
           value = metaObject.getValue(propertyName);
         }
         cacheKey.update(value);
@@ -334,6 +349,7 @@ public abstract class BaseExecutor implements Executor {
 
   private <E> List<E> queryFromDatabase(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
     List<E> list;
+    //表示这个key正在执行查询操作，后面如果还有查询这个key，应该是等待
     localCache.putObject(key, EXECUTION_PLACEHOLDER);
     try {
       list = doQuery(ms, parameter, rowBounds, resultHandler, boundSql);

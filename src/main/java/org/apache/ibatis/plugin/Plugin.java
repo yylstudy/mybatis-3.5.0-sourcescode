@@ -64,6 +64,7 @@ public class Plugin implements InvocationHandler {
 
   /**
    * 拦截器真正的调用方法，这个方法是在拦截器的方法上调用的，而不是在mapper的方法，因为此时mapper方法肯定已经调用了
+   * 所以这个代理类是对四大对象的代理封装，那么怎么判断需要代理的方法呢？？？？？
    * @param proxy
    * @param method
    * @param args
@@ -74,6 +75,7 @@ public class Plugin implements InvocationHandler {
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     try {
       Set<Method> methods = signatureMap.get(method.getDeclaringClass());
+      //就是在这里进行需要额外处理方法的判定，否则直接调用被代理对象的方法
       if (methods != null && methods.contains(method)) {
         //这里才是调用拦截器真正的intercept方法的实现
         return interceptor.intercept(new Invocation(target, method, args));

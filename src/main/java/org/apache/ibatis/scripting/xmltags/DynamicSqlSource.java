@@ -25,6 +25,11 @@ import org.apache.ibatis.session.Configuration;
 /**
  * @author Clinton Begin
  */
+
+/**
+ * 动态sqlSource，里面存有动态的sqlNode，动态sqlNode也就是平常的动态标签
+ * 以及TextSqlNode，TextSqlNode是含有${}符的sql文本
+ */
 public class DynamicSqlSource implements SqlSource {
 
   private final Configuration configuration;
@@ -37,7 +42,8 @@ public class DynamicSqlSource implements SqlSource {
   }
 
   /**
-   * @param parameterObject 参数名和参数值的映射关系，Map<String,Object>
+   * @param parameterObject 参数名和参数值的映射关系，Map<String,Object>，
+   *      *                  若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身
    * 获取动态sql的BoundSql对象
    * @return 上下文Map，其中包含参数等
    */
@@ -47,14 +53,16 @@ public class DynamicSqlSource implements SqlSource {
     DynamicContext context = new DynamicContext(configuration, parameterObject);
     /**
      * 解析动态sql的表达式，动态的sql语句就是在这里生成sql字符串的并且在这里将sql语句append到
-     * 注意这里apply，是采用装饰类模式，大部分都是判断表达式本身，但是最底层的TextSqlNode
+     * 注意这里apply，是采用装饰类模式，大部分都是判断表达式本身，但是最底层的staticTextSqlNode
      * 就是这个类的apply方法将sql字符串赋值给boundSql对象
+     * 这个rootSqlNode是MixedSqlNode，其中包含对象其它动态node的集合，所以MixedSqlNode
+     * 的apply方法是遍历其中的list，分别调用其中的apply
      */
     rootSqlNode.apply(context);
     //创建一个sqlSourceBuilder，用于解析sqlSource
     SqlSourceBuilder sqlSourceParser = new SqlSourceBuilder(configuration);
     Class<?> parameterType = parameterObject == null ? Object.class : parameterObject.getClass();
-    //解析sqlSource
+    //解析sqlSource，此时这个SqlSource是个StaticSqlSource
     SqlSource sqlSource = sqlSourceParser.parse(context.getSql(), parameterType, context.getBindings());
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
     for (Map.Entry<String, Object> entry : context.getBindings().entrySet()) {

@@ -43,6 +43,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.yyl.MyStringTypeHandler;
 import org.apache.ibatis.binding.MapperMethod.ParamMap;
 import org.apache.ibatis.io.ResolverUtil;
 import org.apache.ibatis.io.Resources;
@@ -206,7 +207,7 @@ public final class TypeHandlerRegistry {
   public TypeHandler<?> getTypeHandler(JdbcType jdbcType) {
     return JDBC_TYPE_HANDLER_MAP.get(jdbcType);
   }
-
+  //解析typeHandler
   public <T> TypeHandler<T> getTypeHandler(Class<T> type, JdbcType jdbcType) {
     return getTypeHandler((Type) type, jdbcType);
   }
@@ -215,11 +216,18 @@ public final class TypeHandlerRegistry {
     return getTypeHandler(javaTypeReference.getRawType(), jdbcType);
   }
 
-  @SuppressWarnings("unchecked")
+  /**
+   * 解析typeHandler
+   * @param type java类型
+   * @param jdbcType jdbc类型
+   * @param <T>
+   * @return
+   */
   private <T> TypeHandler<T> getTypeHandler(Type type, JdbcType jdbcType) {
     if (ParamMap.class.equals(type)) {
       return null;
     }
+    //获取java类型对应的jdbc类型->typeHandler的映射关系
     Map<JdbcType, TypeHandler<?>> jdbcHandlerMap = getJdbcHandlerMap(type);
     TypeHandler<?> handler = null;
     if (jdbcHandlerMap != null) {
@@ -237,6 +245,7 @@ public final class TypeHandlerRegistry {
   }
 
   private Map<JdbcType, TypeHandler<?>> getJdbcHandlerMap(Type type) {
+    //根据java类型获取JDBC类型和typeHandler实例的映射关系
     Map<JdbcType, TypeHandler<?>> jdbcHandlerMap = TYPE_HANDLER_MAP.get(type);
     if (NULL_TYPE_HANDLER_MAP.equals(jdbcHandlerMap)) {
       return null;
@@ -443,14 +452,24 @@ public final class TypeHandlerRegistry {
   // Construct a handler (used also from Builders)
 
   @SuppressWarnings("unchecked")
+
+  public static void main(String[] args) throws Exception{
+    Class javaTypeClass = Class.forName("java.lang.String");
+    Class clazz = Class.forName("com.yyl.MyStringTypeHandler");
+    Constructor<?> c = clazz.getConstructor(Class.class);
+    System.out.println(c.newInstance(javaTypeClass));
+  }
+
   /**
    * 获取实例，这里不会报错吗，自定义的typeHandler并没有String的构造参数？？？？？？？？？？？？？？
+   * 这是因为会抛出异常，因为没有string的构造参数，1抛出异常被NoSuchMethodException 捕获
+   * 不处理，继续向下运行，创建无参构造
    */
   public <T> TypeHandler<T> getInstance(Class<?> javaTypeClass, Class<?> typeHandlerClass) {
     if (javaTypeClass != null) {
       try {
-        Constructor<?> c = typeHandlerClass.getConstructor(Class.class);
-        return (TypeHandler<T>) c.newInstance(javaTypeClass);
+        Constructor<?> c = typeHandlerClass.getConstructor(Class.class);//1
+        return (TypeHandler<T>) c.newInstance(javaTypeClass);//2
       } catch (NoSuchMethodException ignored) {
         // ignored
       } catch (Exception e) {
@@ -458,7 +477,7 @@ public final class TypeHandlerRegistry {
       }
     }
     try {
-      Constructor<?> c = typeHandlerClass.getConstructor();
+      Constructor<?> c = typeHandlerClass.getConstructor();//3
       return (TypeHandler<T>) c.newInstance();
     } catch (Exception e) {
       throw new TypeException("Unable to find a usable constructor for " + typeHandlerClass, e);

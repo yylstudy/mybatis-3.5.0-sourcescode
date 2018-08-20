@@ -20,6 +20,10 @@ import java.util.List;
 /**
  * @author Clinton Begin
  */
+
+/**
+ * 标签语句类，里面存有一个SqlNode数组，表示这个标签下各个节点（文本、子标签等等）
+ */
 public class MixedSqlNode implements SqlNode {
   //存放sql的各个子标签（包含动态和静态）
   private final List<SqlNode> contents;
@@ -28,8 +32,14 @@ public class MixedSqlNode implements SqlNode {
     this.contents = contents;
   }
 
+  /**
+   * 拼装sql
+   * @param context
+   * @return
+   */
   @Override
   public boolean apply(DynamicContext context) {
+    //循环其中的sqlNode
     for (SqlNode sqlNode : contents) {
       sqlNode.apply(context);
     }

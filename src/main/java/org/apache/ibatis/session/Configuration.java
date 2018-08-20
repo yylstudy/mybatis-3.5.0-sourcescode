@@ -144,17 +144,17 @@ public class Configuration {
    */
   protected AutoMappingBehavior autoMappingBehavior = AutoMappingBehavior.PARTIAL;
   protected AutoMappingUnknownColumnBehavior autoMappingUnknownColumnBehavior = AutoMappingUnknownColumnBehavior.NONE;
-  //配置属性元素，初始化默认为空，存放的是configuration->properties标签对应的properties
+  /**配置属性元素，初始化默认为空，存放的是configuration->properties标签对应的properties */
   protected Properties variables = new Properties();
-  //存放反射工厂实例
+  /**存放反射工厂实例*/
   protected ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
-  //存放ObjectFactory属性，若没有自定义，就使用DefaultObjectFactory
+  /**存放ObjectFactory属性，若没有自定义，就使用DefaultObjectFactory*/
   protected ObjectFactory objectFactory = new DefaultObjectFactory();
-  //存放objectWrapperFactory实例
+  /**存放objectWrapperFactory实例*/
   protected ObjectWrapperFactory objectWrapperFactory = new DefaultObjectWrapperFactory();
-  //懒加载配置
+  /**懒加载配置*/
   protected boolean lazyLoadingEnabled = false;
-  //指定mybatis创建具有延迟加载能力的对象所用到的代理工具
+  /**指定mybatis创建具有延迟加载能力的对象所用到的代理工具*/
   protected ProxyFactory proxyFactory = new JavassistProxyFactory(); // #224 Using internal Javassist instead of OGNL
 
   protected String databaseId;
@@ -583,6 +583,14 @@ public class Configuration {
     return getDefaultScriptingLanguageInstance();
   }
 
+  /**
+   * 创建一个,MetaObject对象，这是mybatis提供的底层写法，这是环境中，我们可能使用到更多的是
+   * mybatis为我们提供的另一个方法
+   * SystemMetaObject.forObject(Object obj);
+   * 这个方法主要用于包装对象
+   * 该MeatObject还有两个方法，getValue(String name); 是获取属性的值 支持OGNL表达式
+   * setValue(String name,Object obj) 方法用于修改属性值 支持OGNL表达式
+   */
   public MetaObject newMetaObject(Object object) {
     return MetaObject.forObject(object, objectFactory, objectWrapperFactory, reflectorFactory);
   }
@@ -621,7 +629,8 @@ public class Configuration {
    * 构建一个statementHandler，这是sqlSession下的四大对象之一，其它三个是Executor,ParameterHandler,ResultHandler
    * @param executor 执行器
    * @param mappedStatement 要执行的方法对象
-   * @param parameterObject 参数名和参数值的映射关系，Map<String,Object>
+   * @param parameterObject 参数名和参数值的映射关系，Map<String,Object>，
+   *      *                  若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身
    * @param rowBounds RowBounds
    * @param resultHandler
    * @param boundSql
@@ -630,6 +639,7 @@ public class Configuration {
   public StatementHandler newStatementHandler(Executor executor,MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
     //构建一个RoutingStatementHandler 这是真正的StatementHandler的装饰类
     StatementHandler statementHandler = new RoutingStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
+    //判断是否执行拦截器，是否需要进行代理
     statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);
     return statementHandler;
   }
@@ -661,7 +671,7 @@ public class Configuration {
       //执行器装饰类
       executor = new CachingExecutor(executor);
     }
-    //解析自定义的拦截器
+    //判断是否存在作用于Executor的拦截器
     executor = (Executor) interceptorChain.pluginAll(executor);
     return executor;
   }
@@ -955,6 +965,7 @@ public class Configuration {
       this.name = name;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public V put(String key, V value) {
       if (containsKey(key)) {
@@ -971,6 +982,7 @@ public class Configuration {
       return super.put(key, value);
     }
 
+    @Override
     public V get(Object key) {
       V value = super.get(key);
       if (value == null) {

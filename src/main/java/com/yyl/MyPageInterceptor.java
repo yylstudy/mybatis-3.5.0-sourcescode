@@ -89,13 +89,12 @@ public class MyPageInterceptor implements Interceptor {
 
     /**
      *
-     * 生成拦截器处理过的代理对象
+     * 生成拦截器处理过的代理对象，这里应该直接判断，代理对象需要生成在哪些类上，需要和Signature的注解对应
      * @param target  CachingExecutor
      * @return
      */
     @Override
     public Object plugin(Object target) {
-        // TODO Auto-generated method stub
         if (target instanceof StatementHandler) {
             return Plugin.wrap(target, this);
         } else {

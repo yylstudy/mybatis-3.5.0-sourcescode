@@ -39,19 +39,23 @@ public class ResultMapping {
   private Class<?> javaType;
   //JDBC类型
   private JdbcType jdbcType;
-  //typeHandler
+  //typeHandler实例
   private TypeHandler<?> typeHandler;
   /**
-   * association、collection的resultMap 元素的值  这个resultMap就是<<association>、<collection>标签中
-   * 没有select的resultMap的id值，这个resultMap其实也是再configuration的resultMap缓存中
+   * association、collection的resultMap 元素的值  这个resultMap就是<association>、<collection>标签中
+   * 没有select的resultMap的id值或者是普通列直接定义resultMap的id值，这个resultMap其实也是在configuration的resultMap缓存中
    * 所有这个的在获取结果集的时候，肯定要判断这个，不为空时到缓存中获取这个对应的resultMap
    */
   private String nestedResultMapId;
-  //association、collection的select 元素的值
+  //association、collection的select 元素的值，表示要执行的sql语句
   private String nestedQueryId;
   private Set<String> notNullColumns;
   //列名前缀
   private String columnPrefix;
+  /**
+   * 表示这个列类型  若resultMapping节点名是<constructor>，那么集合包含CONSTRUCTOR
+   * 如果CONSTRUCTOR下存在子节点idArg或者resultMapping是<id>标签，那么这个集合包含ID，
+   */
   private List<ResultFlag> flags;
   private List<ResultMapping> composites;
   //association、collection的resultSet 元素的值
@@ -156,10 +160,14 @@ public class ResultMapping {
       resultMapping.composites = Collections.unmodifiableList(resultMapping.composites);
       //typeHandler赋值
       resolveTypeHandler();
+      //校验
       validate();
       return resultMapping;
     }
 
+    /**
+     * 校验resultMapping的一些属性
+     */
     private void validate() {
       // Issue #697: cannot define both nestedQueryId and nestedResultMapId
       if (resultMapping.nestedQueryId != null && resultMapping.nestedResultMapId != null) {
@@ -187,8 +195,13 @@ public class ResultMapping {
         }
       }
     }
-    
+
+    /**
+     * 获取typeHandler，注意这里是先获取<resultMap>下的result 标签的typeHandler，若没有配置
+     * 那么就从configuration中获取
+     */
     private void resolveTypeHandler() {
+
       if (resultMapping.typeHandler == null && resultMapping.javaType != null) {
         Configuration configuration = resultMapping.configuration;
         TypeHandlerRegistry typeHandlerRegistry = configuration.getTypeHandlerRegistry();

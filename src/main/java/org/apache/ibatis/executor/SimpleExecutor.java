@@ -43,7 +43,8 @@ public class SimpleExecutor extends BaseExecutor {
   /**
    * 真正做update操作的地方
    * @param ms
-   * @param parameter 参数名和参数值的映射关系，Map<String,Object>
+   * @param parameter 参数名和参数值的映射关系，Map<String,Object>，
+   *      *                  若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身
    * @return
    * @throws SQLException
    */
@@ -53,7 +54,7 @@ public class SimpleExecutor extends BaseExecutor {
     try {
       Configuration configuration = ms.getConfiguration();
       /**
-       * 创建一个StatementHandler，这是SqlSession下的四大对象之一
+       * 创建一个RoutingStatementHandler，这是SqlSession下的四大对象之一
        * 用于获取statement
        */
       StatementHandler handler = configuration.newStatementHandler(this, ms, parameter, RowBounds.DEFAULT, null, null);
@@ -65,6 +66,17 @@ public class SimpleExecutor extends BaseExecutor {
     }
   }
 
+  /**
+   * 真正执行查询操作
+   * @param ms
+   * @param parameter
+   * @param rowBounds
+   * @param resultHandler
+   * @param boundSql
+   * @param <E>
+   * @return
+   * @throws SQLException
+   */
   @Override
   public <E> List<E> doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
     Statement stmt = null;
@@ -100,6 +112,7 @@ public class SimpleExecutor extends BaseExecutor {
      * 这个方法的目的是获取一个Statement，比如PreparedStatement
      */
     stmt = handler.prepare(connection, transaction.getTimeout());
+    //参数初始化，这里就是使用到创建StatementHandler时创建的ParameterHandler
     handler.parameterize(stmt);
     return stmt;
   }

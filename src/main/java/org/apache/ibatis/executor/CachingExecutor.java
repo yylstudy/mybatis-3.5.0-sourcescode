@@ -78,7 +78,7 @@ public class CachingExecutor implements Executor {
   public int update(MappedStatement ms, Object parameterObject) throws SQLException {
     /**
      * 注意所谓的mybatis的一级、二级缓存的增删改去更新缓存，其实都是清空缓存的
-     * 所以这里是清空二级缓存？？？虽然我没看到哪里调用了cache.clear()方法？？？？？？？？？？
+     * 所以这里是清空二级缓存
      */
     flushCacheIfRequired(ms);
     return delegate.update(ms, parameterObject);
@@ -87,6 +87,7 @@ public class CachingExecutor implements Executor {
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
     BoundSql boundSql = ms.getBoundSql(parameterObject);
+    //创建缓存key，一级缓存和二级缓存的key应该是一样的
     CacheKey key = createCacheKey(ms, parameterObject, rowBounds, boundSql);
     return query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
   }
@@ -97,6 +98,18 @@ public class CachingExecutor implements Executor {
     return delegate.queryCursor(ms, parameter, rowBounds);
   }
 
+  /**
+   * 查询方法
+   * @param ms
+   * @param parameterObject 参数尅性
+   * @param rowBounds
+   * @param resultHandler
+   * @param key 缓存key
+   * @param boundSql
+   * @param <E>
+   * @return
+   * @throws SQLException
+   */
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)
       throws SQLException {
@@ -106,9 +119,14 @@ public class CachingExecutor implements Executor {
       if (ms.isUseCache() && resultHandler == null) {
         ensureNoOutParams(ms, boundSql);
         @SuppressWarnings("unchecked")
+        /**
+         * //先获取二级缓存
+         * 从缓存中获取
+          */
         List<E> list = (List<E>) tcm.getObject(cache, key);
         if (list == null) {
           list = delegate.<E> query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
+          //插入缓存
           tcm.putObject(cache, key, list); // issue #578 and #116
         }
         return list;

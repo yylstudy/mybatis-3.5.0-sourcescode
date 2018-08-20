@@ -52,8 +52,9 @@ public final class MappedStatement {
   private SqlSource sqlSource;
   //当前sql的缓存对象
   private Cache cache;
-  //参数map
+  //参数map，这个就是存放参数的对象，parameterMap和parameterType占其一
   private ParameterMap parameterMap;
+  //resultMap的结果集
   private List<ResultMap> resultMaps;
   //是否必须刷新缓存
   private boolean flushCacheRequired;
@@ -63,11 +64,12 @@ public final class MappedStatement {
   //sql语句类型
   private SqlCommandType sqlCommandType;
   //是否允许JDBC自动生成主键
-  //Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE
+  //Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE？？？这个如何获取selectKey的呢
   private KeyGenerator keyGenerator;
   //selectKey映射到参数的属性字段名
   private String[] keyProperties;
   private String[] keyColumns;
+  //association、collection的是否包含resultMap
   private boolean hasNestedResultMaps;
   private String databaseId;
   //log类型
@@ -308,13 +310,15 @@ public final class MappedStatement {
 
   /**
    * 获取要执行的sql对象
-   * @param parameterObject 参数名和参数值的映射关系，Map<String,Object>
+   * @param parameterObject 参数名和参数值的映射关系，Map<String,Object>，
+   *      *                  若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身
    * @return
    */
   public BoundSql getBoundSql(Object parameterObject) {
     //获取BoundSql对象
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
+    //一般参数集合这里的参数集合已经有了，因为刚才刚解析的staticSqlSource的BoundSql
     if (parameterMappings == null || parameterMappings.isEmpty()) {
       boundSql = new BoundSql(configuration, boundSql.getSql(), parameterMap.getParameterMappings(), parameterObject);
     }

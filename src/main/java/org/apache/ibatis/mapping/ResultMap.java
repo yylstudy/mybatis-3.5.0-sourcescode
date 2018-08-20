@@ -43,18 +43,21 @@ public class ResultMap {
   private Class<?> type;
   //resultMap下子元素的对象集合
   private List<ResultMapping> resultMappings;
-  //<resultMap>下id标签的集合
+  /**
+   * <resultMap>下id标签的集合 或者constructor下<idArg>标签，
+   * 若没有id标签，则存放所有的resultMapping
+   */
   private List<ResultMapping> idResultMappings;
   //<resultMap>下constructor标签的集合
   private List<ResultMapping> constructorResultMappings;
-  //<resultMap>下property标签的集合
+  //<resultMap>下property、id标签的集合
   private List<ResultMapping> propertyResultMappings;
-  //resultMap的数据库列名集合
+  //resultMap的数据库列名集合，大写的
   private Set<String> mappedColumns;
   //resultMap的属性字段名集合
   private Set<String> mappedProperties;
   private Discriminator discriminator;
-  //association、collection的是否包含resultMap
+  //association、collection的是否包含resultMap或者不包含select
   private boolean hasNestedResultMaps;
   //association、collection是否包含select 元素
   private boolean hasNestedQueries;
@@ -102,6 +105,7 @@ public class ResultMap {
       resultMap.idResultMappings = new ArrayList<>();
       resultMap.constructorResultMappings = new ArrayList<>();
       resultMap.propertyResultMappings = new ArrayList<>();
+      //resultMap构造参数名称集合
       final List<String> constructorArgNames = new ArrayList<>();
       for (ResultMapping resultMapping : resultMap.resultMappings) {
         resultMap.hasNestedQueries = resultMap.hasNestedQueries || resultMapping.getNestedQueryId() != null;
@@ -123,6 +127,7 @@ public class ResultMap {
         if(property != null) {
           resultMap.mappedProperties.add(property);
         }
+        //包含<constructor>节点
         if (resultMapping.getFlags().contains(ResultFlag.CONSTRUCTOR)) {
           resultMap.constructorResultMappings.add(resultMapping);
           if (resultMapping.getProperty() != null) {
@@ -139,6 +144,7 @@ public class ResultMap {
       if (resultMap.idResultMappings.isEmpty()) {
         resultMap.idResultMappings.addAll(resultMap.resultMappings);
       }
+      //存在<constructor>标签
       if (!constructorArgNames.isEmpty()) {
         final List<String> actualArgNames = argNamesOfMatchingConstructor(constructorArgNames);
         if (actualArgNames == null) {
@@ -147,6 +153,7 @@ public class ResultMap {
               + resultMap.getType().getName() + "' by arg names " + constructorArgNames
               + ". There might be more info in debug log.");
         }
+        //对resultMap的constructorResultMappings进行根据参数位置排序
         Collections.sort(resultMap.constructorResultMappings, (o1, o2) -> {
           int paramIdx1 = actualArgNames.indexOf(o1.getProperty());
           int paramIdx2 = actualArgNames.indexOf(o2.getProperty());
@@ -162,12 +169,22 @@ public class ResultMap {
       return resultMap;
     }
 
+    /**
+     *
+     * @param constructorArgNames <constructor>标签的参数名称集合
+     * @return
+     */
     private List<String> argNamesOfMatchingConstructor(List<String> constructorArgNames) {
+      //获取resultMap对应的java类型的所有的构造器
       Constructor<?>[] constructors = resultMap.type.getDeclaredConstructors();
       for (Constructor<?> constructor : constructors) {
+        //构造器的参数类型数组
         Class<?>[] paramTypes = constructor.getParameterTypes();
+        //参数长度相同
         if (constructorArgNames.size() == paramTypes.length) {
+          //参数名称集合
           List<String> paramNames = getArgNames(constructor);
+          //之前解析resultMap的构造参数名称集合都包含反射Java类的参数名称集合
           if (constructorArgNames.containsAll(paramNames)
               && argTypesMatch(constructorArgNames, paramTypes, paramNames)) {
             return paramNames;
@@ -196,6 +213,11 @@ public class ResultMap {
       return true;
     }
 
+    /**
+     * 获取构造参数的参数名集合
+     * @param constructor
+     * @return
+     */
     private List<String> getArgNames(Constructor<?> constructor) {
       List<String> paramNames = new ArrayList<>();
       List<String> actualParamNames = null;
@@ -211,6 +233,7 @@ public class ResultMap {
         }
         if (name == null && resultMap.configuration.isUseActualParamName()) {
           if (actualParamNames == null) {
+            //参数名称集合
             actualParamNames = ParamNameUtil.getParamNames(constructor);
           }
           if (actualParamNames.size() > paramIndex) {

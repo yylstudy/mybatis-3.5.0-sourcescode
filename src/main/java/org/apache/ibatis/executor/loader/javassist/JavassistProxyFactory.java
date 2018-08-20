@@ -56,6 +56,16 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
     }
   }
 
+  /**
+   * 创建具有延迟加载能力的代理对象
+   * @param target 被代理对象
+   * @param lazyLoader 懒加载器
+   * @param configuration
+   * @param objectFactory 创建result的工厂
+   * @param constructorArgTypes 构造参数类型
+   * @param constructorArgs 构造参数
+   * @return
+   */
   @Override
   public Object createProxy(Object target, ResultLoaderMap lazyLoader, Configuration configuration, ObjectFactory objectFactory, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
     return EnhancedResultObjectProxyImpl.createProxy(target, lazyLoader, configuration, objectFactory, constructorArgTypes, constructorArgs);
@@ -70,6 +80,14 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
       // Not Implemented
   }
 
+  /**
+   * 创建具有延迟加载能力的代理对象
+   * @param type 被代理class类型
+   * @param callback
+   * @param constructorArgTypes
+   * @param constructorArgs
+   * @return
+   */
   static Object crateProxy(Class<?> type, MethodHandler callback, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
 
     ProxyFactory enhancer = new ProxyFactory();
@@ -103,12 +121,23 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
 
     private final Class<?> type;
     private final ResultLoaderMap lazyLoader;
+    //当aggressiveLazyLoading为true时，就是使用层级延迟加载，改为false就是按需延迟加载
     private final boolean aggressive;
+    //指定哪个对象的方法触发一次延迟加载
     private final Set<String> lazyLoadTriggerMethods;
     private final ObjectFactory objectFactory;
     private final List<Class<?>> constructorArgTypes;
     private final List<Object> constructorArgs;
 
+    /**
+     *
+     * @param type 目标对象类型
+     * @param lazyLoader 懒加载器
+     * @param configuration
+     * @param objectFactory
+     * @param constructorArgTypes
+     * @param constructorArgs
+     */
     private EnhancedResultObjectProxyImpl(Class<?> type, ResultLoaderMap lazyLoader, Configuration configuration, ObjectFactory objectFactory, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
       this.type = type;
       this.lazyLoader = lazyLoader;
@@ -118,7 +147,16 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
       this.constructorArgTypes = constructorArgTypes;
       this.constructorArgs = constructorArgs;
     }
-
+    /**
+     * 创建具有延迟加载能力的代理对象
+     * @param target 被代理对象
+     * @param lazyLoader 懒加载器
+     * @param configuration
+     * @param objectFactory 创建result的工厂
+     * @param constructorArgTypes 构造参数类型
+     * @param constructorArgs 构造参数
+     * @return
+     */
     public static Object createProxy(Object target, ResultLoaderMap lazyLoader, Configuration configuration, ObjectFactory objectFactory, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
       final Class<?> type = target.getClass();
       EnhancedResultObjectProxyImpl callback = new EnhancedResultObjectProxyImpl(type, lazyLoader, configuration, objectFactory, constructorArgTypes, constructorArgs);

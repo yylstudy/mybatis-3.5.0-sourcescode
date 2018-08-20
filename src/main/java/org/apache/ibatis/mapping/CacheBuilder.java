@@ -102,9 +102,10 @@ public class CacheBuilder {
     setDefaultImplementations();
     //创建一个缓存的实例
     Cache cache = newBaseCacheInstance(implementation, id);
+    //填充缓存属性
     setCacheProperties(cache);
     // issue #352, do not apply decorators to custom caches
-    //如果缓存的实现类是PerpetualCache
+    //如果缓存的实现类是PerpetualCache，也就是默认缓存实现类
     if (PerpetualCache.class.equals(cache.getClass())) {
       for (Class<? extends Cache> decorator : decorators) {
         /**
@@ -138,7 +139,7 @@ public class CacheBuilder {
   }
 
   /**
-   * 设置装饰属性值
+   * 设置装饰缓存类
    * @param cache 装饰缓存类
    * @return
    */

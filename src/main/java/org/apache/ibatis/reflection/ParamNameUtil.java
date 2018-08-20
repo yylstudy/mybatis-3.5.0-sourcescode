@@ -23,10 +23,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ParamNameUtil {
+
+  
   public static List<String> getParamNames(Method method) {
     return getParameterNames(method);
   }
 
+  /**
+   * 获取参数名称集合，这里参数名称只是 arg0,arg1好像，但是jdk1.8以上版本就是真正的参数名称
+   * @param constructor
+   * @return
+   */
   public static List<String> getParamNames(Constructor<?> constructor) {
     return getParameterNames(constructor);
   }

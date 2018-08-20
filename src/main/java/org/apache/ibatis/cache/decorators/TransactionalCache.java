@@ -36,13 +36,20 @@ import org.apache.ibatis.logging.LogFactory;
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
+
+/**
+ * mybatis事务缓存装饰类
+ */
 public class TransactionalCache implements Cache {
 
   private static final Log log = LogFactory.getLog(TransactionalCache.class);
   //缓存对象
   private final Cache delegate;
+  //是否在提交的时候清空
   private boolean clearOnCommit;
+  //这个就是事务缓存存放的键值对
   private final Map<Object, Object> entriesToAddOnCommit;
+  //存放未击中缓存的key
   private final Set<Object> entriesMissedInCache;
 
   public TransactionalCache(Cache delegate) {
@@ -61,10 +68,11 @@ public class TransactionalCache implements Cache {
   public int getSize() {
     return delegate.getSize();
   }
-
+  //获取键值对
   @Override
   public Object getObject(Object key) {
     // issue #116
+    //直接从真正缓存中获取
     Object object = delegate.getObject(key);
     if (object == null) {
       entriesMissedInCache.add(key);
@@ -82,6 +90,14 @@ public class TransactionalCache implements Cache {
     return null;
   }
 
+  /**
+   * 添加缓存，注意这里是添加进 当前缓存类的map，而未添加到真正的缓存对象中
+   * 那什么时候添加进真正的缓存对象呢？  是在commit方法中，所以之前有提到二级缓存在执行acid操作后
+   * sqlSession都要执行commit操作，缓存才会生效，就是这个原因
+   * @param key Can be any object but usually it is a {@link CacheKey}
+   * @param object
+   */
+
   @Override
   public void putObject(Object key, Object object) {
     entriesToAddOnCommit.put(key, object);
@@ -98,11 +114,16 @@ public class TransactionalCache implements Cache {
     entriesToAddOnCommit.clear();
   }
 
+  /**
+   * 提交当前缓存，也就是遍历当前缓存键值对插入到其装饰的对象中
+   */
   public void commit() {
     if (clearOnCommit) {
       delegate.clear();
     }
+    //
     flushPendingEntries();
+    //重置当前缓存对象
     reset();
   }
 
@@ -117,10 +138,14 @@ public class TransactionalCache implements Cache {
     entriesMissedInCache.clear();
   }
 
+  /**
+   * 遍历并加入到真正的缓存类中
+   */
   private void flushPendingEntries() {
     for (Map.Entry<Object, Object> entry : entriesToAddOnCommit.entrySet()) {
       delegate.putObject(entry.getKey(), entry.getValue());
     }
+    //遍历未被击中的缓存key
     for (Object entry : entriesMissedInCache) {
       if (!entriesToAddOnCommit.containsKey(entry)) {
         delegate.putObject(entry, null);

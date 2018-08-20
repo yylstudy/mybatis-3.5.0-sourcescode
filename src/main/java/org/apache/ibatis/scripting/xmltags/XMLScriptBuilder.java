@@ -33,10 +33,10 @@ import org.w3c.dom.NodeList;
  * @author Clinton Begin
  */
 public class XMLScriptBuilder extends BaseBuilder {
-  //selectKey节点
+  //节点
   private final XNode context;
   private boolean isDynamic;
-  //selectKey的父节点的参数类型
+  //节点的参数类型
   private final Class<?> parameterType;
   //动态sql语句几个标签的解析器配置
   private final Map<String, NodeHandler> nodeHandlerMap = new HashMap<>();
@@ -77,7 +77,7 @@ public class XMLScriptBuilder extends BaseBuilder {
       //若是动态创建动态SqlSource
       sqlSource = new DynamicSqlSource(configuration, rootSqlNode);
     } else {
-      //否则创建原生SqlSource
+      //否则创建原生SqlSource，这个也是装饰类，内有被装饰的sqlSource，是staticSqlSource
       sqlSource = new RawSqlSource(configuration, rootSqlNode, parameterType);
     }
     return sqlSource;
@@ -113,6 +113,7 @@ public class XMLScriptBuilder extends BaseBuilder {
         if (handler == null) {
           throw new BuilderException("Unknown element <" + nodeName + "> in SQL statement.");
         }
+        //将当前标签加入到contents中
         handler.handleNode(child, contents);
         isDynamic = true;
       }
@@ -204,10 +205,17 @@ public class XMLScriptBuilder extends BaseBuilder {
     public IfHandler() {
       // Prevent Synthetic Access
     }
-    //if动态标签解析
+
+    /**
+     * if动态标签解析
+     * @param nodeToHandle 动态标签<if>
+     * @param targetContents 标签集合
+     */
     @Override
     public void handleNode(XNode nodeToHandle, List<SqlNode> targetContents) {
+      //解析当前标签
       MixedSqlNode mixedSqlNode = parseDynamicTags(nodeToHandle);
+      //获取if标签的test属性值
       String test = nodeToHandle.getStringAttribute("test");
       IfSqlNode ifSqlNode = new IfSqlNode(mixedSqlNode, test);
       targetContents.add(ifSqlNode);

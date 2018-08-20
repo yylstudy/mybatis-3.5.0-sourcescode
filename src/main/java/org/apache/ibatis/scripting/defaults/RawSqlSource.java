@@ -33,9 +33,15 @@ import org.apache.ibatis.session.Configuration;
  * @author Eduardo Macarron
  */
 public class RawSqlSource implements SqlSource {
-
+  //staticSqlSource
   private final SqlSource sqlSource;
 
+  /**
+   * 创建原始sqlSource
+   * @param configuration
+   * @param rootSqlNode MixedSqlNode 里面的sqlNode集合都是StaticTestSqlNode 纯文本的sql节点
+   * @param parameterType 参数类型
+   */
   public RawSqlSource(Configuration configuration, SqlNode rootSqlNode, Class<?> parameterType) {
     this(configuration, getSql(configuration, rootSqlNode), parameterType);
   }
@@ -46,8 +52,16 @@ public class RawSqlSource implements SqlSource {
     sqlSource = sqlSourceParser.parse(sql, clazz, new HashMap<String, Object>());
   }
 
+  /**
+   * 获取原始sql的sql文本
+   * @param configuration
+   * @param rootSqlNode MixedSqlNode 里面的sqlNode集合都是StaticTestSqlNode 纯文本的sql节点
+   * @return
+   */
   private static String getSql(Configuration configuration, SqlNode rootSqlNode) {
+    //构建一个新的ContextMap，value都为空
     DynamicContext context = new DynamicContext(configuration, null);
+    //向上面的ContextMap中的StringBuilder添加sql
     rootSqlNode.apply(context);
     return context.getSql();
   }

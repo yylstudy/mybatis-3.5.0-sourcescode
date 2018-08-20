@@ -42,11 +42,21 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
     return create(type, null, null);
   }
 
+  /**
+   * 反射获取结果集的实例
+   * @param type Object type
+   * @param constructorArgTypes Constructor argument types
+   * @param constructorArgs Constructor argument values
+   * @param <T>
+   * @return
+   */
   @SuppressWarnings("unchecked")
   @Override
   public <T> T create(Class<T> type, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
+    //解析获取要反射的Class
     Class<?> classToCreate = resolveInterface(type);
     // we know types are assignable
+    //反射获取一个实例
     return (T) instantiateClass(classToCreate, constructorArgTypes, constructorArgs);
   }
 

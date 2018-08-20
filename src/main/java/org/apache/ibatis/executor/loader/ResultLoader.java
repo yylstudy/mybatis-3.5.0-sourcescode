@@ -40,12 +40,17 @@ import org.apache.ibatis.transaction.TransactionFactory;
 public class ResultLoader {
 
   protected final Configuration configuration;
+  //执行器
   protected final Executor executor;
+  //执行的语句对象
   protected final MappedStatement mappedStatement;
+  //参数值对象
   protected final Object parameterObject;
+  //association、collection对应的select的java类型
   protected final Class<?> targetType;
   protected final ObjectFactory objectFactory;
   protected final CacheKey cacheKey;
+  //执行sql的BoundSql对象
   protected final BoundSql boundSql;
   protected final ResultExtractor resultExtractor;
   protected final long creatorThreadId;

@@ -79,6 +79,14 @@ public class ParameterExpression extends HashMap<String, String> {
     }
     return expression.length();
   }
+  public static void main(String[] args){
+    int i=32;
+    int j=2;
+    char c1=(char) (i+64);
+    char c2=(char) (j+64);
+    System.out.println(c1);
+    System.out.println(c2);
+  }
 
   private int skipUntil(String expression, int p, final String endChars) {
     for (int i = p; i < expression.length(); i++) {

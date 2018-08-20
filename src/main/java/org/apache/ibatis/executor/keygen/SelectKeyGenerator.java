@@ -45,6 +45,7 @@ public class SelectKeyGenerator implements KeyGenerator {
 
   @Override
   public void processBefore(Executor executor, MappedStatement ms, Statement stmt, Object parameter) {
+    //是否在sql语句执行之前执行
     if (executeBefore) {
       processGeneratedKeys(executor, ms, parameter);
     }
@@ -57,16 +58,27 @@ public class SelectKeyGenerator implements KeyGenerator {
     }
   }
 
+  /**
+   * 获取selectKey
+   * @param executor 执行器
+   * @param ms select、insert、delete、update表示的MappedStatement
+   * @param parameter 参数名和参数值的映射关系，Map<String,Object>
+   */
   private void processGeneratedKeys(Executor executor, MappedStatement ms, Object parameter) {
     try {
       if (parameter != null && keyStatement != null && keyStatement.getKeyProperties() != null) {
+        //获取selectKey映射到参数上的属性名
         String[] keyProperties = keyStatement.getKeyProperties();
         final Configuration configuration = ms.getConfiguration();
+        //创建一个参数对象的MetaObject，方便后面好取值和设置值，getValue()和setValue
         final MetaObject metaParam = configuration.newMetaObject(parameter);
+        //若selectKey要回填参数key不为空
         if (keyProperties != null) {
           // Do not close keyExecutor.
           // The transaction will be closed by parent executor.
+          //创建一个selectKey的执行器
           Executor keyExecutor = configuration.newExecutor(executor.getTransaction(), ExecutorType.SIMPLE);
+          //这个先看查询源码-------------------------
           List<Object> values = keyExecutor.query(keyStatement, parameter, RowBounds.DEFAULT, Executor.NO_RESULT_HANDLER);
           if (values.size() == 0) {
             throw new ExecutorException("SelectKey returned no data.");            

@@ -50,7 +50,7 @@ public class VelocitySqlSourceBuilder extends BaseBuilder {
   }
 
   private static class ParameterMappingTokenHandler extends BaseBuilder implements TokenHandler {
-
+    //存放parameterMapping
     private List<ParameterMapping> parameterMappings = new ArrayList<ParameterMapping>();
     private Class<?> parameterType;
 
@@ -69,6 +69,11 @@ public class VelocitySqlSourceBuilder extends BaseBuilder {
       return "?";
     }
 
+    /**
+     * 根据传入参数的key解析ParameterMapping
+     * @param content
+     * @return
+     */
     private ParameterMapping buildParameterMapping(String content) {
       Map<String, String> propertiesMap = parseParameterMapping(content);
       String property = propertiesMap.get("property");

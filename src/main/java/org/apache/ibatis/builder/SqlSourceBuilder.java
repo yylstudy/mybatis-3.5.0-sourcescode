@@ -43,28 +43,36 @@ public class SqlSourceBuilder extends BaseBuilder {
    * 解析sqlSource
    * @param originalSql 要执行的sql语句
    * @param parameterType 参数类型
-   * @param additionalParameters 环境上下文，包含参数等
+   * @param additionalParameters ContextMap 其中有两个key 一个是_parameter 值是参数对象
    * @return
    */
   public SqlSource parse(String originalSql, Class<?> parameterType, Map<String, Object> additionalParameters) {
-    //构建
+    /**
+     * 注意这个类有个方法handleToken，会在下面的parse.parse方法中调用到，handleToken中会获取
+     * parameterMapping，这是个隐藏点，之前一直找不到在哪里进行ParameterMap中parameterMappings的赋值
+     */
     ParameterMappingTokenHandler handler = new ParameterMappingTokenHandler(configuration, parameterType, additionalParameters);
     GenericTokenParser parser = new GenericTokenParser("#{", "}", handler);
-    //解析 #{} ，获取真正的sql语句
+    //解析 #{} ，将#{}转化为?，获取PreparedStatement需要的sql语句，例如 select * from test where id=?
     String sql = parser.parse(originalSql);
     return new StaticSqlSource(configuration, sql, handler.getParameterMappings());
   }
 
   private static class ParameterMappingTokenHandler extends BaseBuilder implements TokenHandler {
-    //parameterMapping，不知道哪里设置值
+    /**
+     * parameterMapping，不知道哪里设置值？？？？，找到了，是在ParameterMappingTokenHandler的handleToken方法中
+     * 进行解析的
+     */
     private List<ParameterMapping> parameterMappings = new ArrayList<>();
     //参数类型（这不是所有参数的类型，而是参数下标和其值得Map类型）
     private Class<?> parameterType;
+    //构建一个ContextMap的MetaObject对象，这个ContextMap 其中有两个key 一个是_parameter 值是参数对象
     private MetaObject metaParameters;
 
     public ParameterMappingTokenHandler(Configuration configuration, Class<?> parameterType, Map<String, Object> additionalParameters) {
       super(configuration);
       this.parameterType = parameterType;
+      //构建一个ContextMap的MetaObject对象，这个ContextMap 其中有两个key 一个是_parameter 值是参数对象
       this.metaParameters = configuration.newMetaObject(additionalParameters);
     }
 
@@ -78,19 +86,29 @@ public class SqlSourceBuilder extends BaseBuilder {
       return "?";
     }
 
+    /**
+     * 这个方法就是构建一个parameterMapping
+     * @param content 这个就是#{}中的值
+     *  例如  name,javaType=string,jdbcType=VARCHAR,typeHandler=com.yyl.typeHandler.MyStringTypeHandler
+     * @return
+     */
     private ParameterMapping buildParameterMapping(String content) {
       Map<String, String> propertiesMap = parseParameterMapping(content);
+      //获取属性key，上面的例子，就是name
       String property = propertiesMap.get("property");
       Class<?> propertyType;
       if (metaParameters.hasGetter(property)) { // issue #448 get type from additional params
+        //获取参数的类型
         propertyType = metaParameters.getGetterType(property);
       } else if (typeHandlerRegistry.hasTypeHandler(parameterType)) {
         propertyType = parameterType;
+        //获取jdbcType的值
       } else if (JdbcType.CURSOR.name().equals(propertiesMap.get("jdbcType"))) {
         propertyType = java.sql.ResultSet.class;
       } else if (property == null || Map.class.isAssignableFrom(parameterType)) {
         propertyType = Object.class;
       } else {
+        //若上面都差找不到proeprty属性，那么构建一个参数类型的反射器，从其中查找
         MetaClass metaClass = MetaClass.forClass(parameterType, configuration.getReflectorFactory());
         if (metaClass.hasGetter(property)) {
           propertyType = metaClass.getGetterType(property);
@@ -101,6 +119,15 @@ public class SqlSourceBuilder extends BaseBuilder {
       ParameterMapping.Builder builder = new ParameterMapping.Builder(configuration, property, propertyType);
       Class<?> javaType = propertyType;
       String typeHandlerAlias = null;
+      /**
+       * 遍历propertiesMap，举个例子，
+       * name,javaType=string,jdbcType=VARCHAR,typeHandler=com.yyl.typeHandler.MyStringTypeHandler
+       * 那么这个propertoesMap就拥有四个键值对：
+       * 1）property->name
+       * 2)javaType->string
+       * 3)jdbcType->VARCHAR
+       * 4)typeHandler->com.yyl.typeHandler.MyStringTypeHandler
+       */
       for (Map.Entry<String, String> entry : propertiesMap.entrySet()) {
         String name = entry.getKey();
         String value = entry.getValue();

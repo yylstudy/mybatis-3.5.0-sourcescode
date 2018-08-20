@@ -32,7 +32,7 @@ import org.apache.ibatis.session.Configuration;
 public class StaticSqlSource implements SqlSource {
   //sql语句
   private final String sql;
-  //参数列表
+  //参数列表，将刚才解析的parameterMapping赋值给这个
   private final List<ParameterMapping> parameterMappings;
   private final Configuration configuration;
 

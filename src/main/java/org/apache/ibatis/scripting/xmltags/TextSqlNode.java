@@ -39,6 +39,10 @@ public class TextSqlNode implements SqlNode {
     this.text = text;
     this.injectionFilter = injectionFilter;
   }
+  public static void main(String[] args){
+    TextSqlNode tx = new TextSqlNode("hef${name.text}eefh");
+    tx.isDynamic();
+  }
   
   public boolean isDynamic() {
     DynamicCheckerTokenParser checker = new DynamicCheckerTokenParser();
@@ -91,7 +95,7 @@ public class TextSqlNode implements SqlNode {
   }
   
   private static class DynamicCheckerTokenParser implements TokenHandler {
-
+    /**判断当前sql是否是动态sql*/
     private boolean isDynamic;
 
     public DynamicCheckerTokenParser() {
@@ -102,6 +106,11 @@ public class TextSqlNode implements SqlNode {
       return isDynamic;
     }
 
+    /**
+     * 可以看到当前类若调用了handleToken方法，那么这个sql就是动态的sql
+     * @param content
+     * @return
+     */
     @Override
     public String handleToken(String content) {
       this.isDynamic = true;

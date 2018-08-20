@@ -200,7 +200,9 @@ public class DefaultSqlSession implements SqlSession {
     /**
      * update处理
      * @param statement MappedStatement的id，用于获取MappedStatement
-     * @param parameter 参数名和参数值的映射关系，Map<String,Object>
+     * @param parameter 参数名和参数值的映射关系，Map<String,Object>，
+     *                  若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身
+     *
      * @return
      */
     @Override

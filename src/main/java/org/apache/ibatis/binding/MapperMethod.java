@@ -65,7 +65,8 @@ public class MapperMethod {
     switch (command.getType()) {
       //insert 语句
       case INSERT: {
-        //获取参数及其值，其实是个Map<String,Object>
+        //参数名和参数值的映射关系，Map<String,Object>，若参数只有一个且没有@Param注解，那么这个
+        //     param就是第一个参数本身
     	Object param = method.convertArgsToSqlCommandParam(args);
         result = rowCountResult(sqlSession.insert(command.getName(), param));
         break;
@@ -149,6 +150,13 @@ public class MapperMethod {
     }
   }
 
+  /**
+   * 获取返回多条的结果集
+   * @param sqlSession
+   * @param args
+   * @param <E>
+   * @return
+   */
   private <E> Object executeForMany(SqlSession sqlSession, Object[] args) {
     List<E> result;
     Object param = method.convertArgsToSqlCommandParam(args);
