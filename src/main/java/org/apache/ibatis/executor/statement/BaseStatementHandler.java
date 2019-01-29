@@ -37,23 +37,23 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
  * @author Clinton Begin
  */
 public abstract class BaseStatementHandler implements StatementHandler {
-  //全局配置
+  /**全局配置*/
   protected final Configuration configuration;
-  //构建范湖JavaBean 工厂实例
+  /**构建返回JavaBean 工厂实例*/
   protected final ObjectFactory objectFactory;
-  //typeHandler注册器
+  /**typeHandler注册器*/
   protected final TypeHandlerRegistry typeHandlerRegistry;
-  //resultSetHandler，用于后面处理返回结果集的
+  /**resultSetHandler，用于后面处理返回结果集的*/
   protected final ResultSetHandler resultSetHandler;
-  //parameterHandler，用于后面处理参数的
+  /**parameterHandler，用于后面处理参数的*/
   protected final ParameterHandler parameterHandler;
-  //执行器
+  /**执行器 SimpleExecutor*/
   protected final Executor executor;
-  //mappedStatement
+  /**MappedStatement*/
   protected final MappedStatement mappedStatement;
-  //RowBounds
+  /**RowBounds*/
   protected final RowBounds rowBounds;
-  //要执行的sql对象
+  /**要执行的sql对象*/
   protected BoundSql boundSql;
   /**
    * 构建一个基础的StatementHandler
@@ -76,14 +76,14 @@ public abstract class BaseStatementHandler implements StatementHandler {
 
     if (boundSql == null) { // issue #435, get the key before calculating the statement
       generateKeys(parameterObject);
-      //获取boundSql对象
+      /**获取boundSql对象*/
       boundSql = mappedStatement.getBoundSql(parameterObject);
     }
 
     this.boundSql = boundSql;
-    //创建sqlSession 下的四大对象之一，parameterHandler，用于处理参数
+    /**创建sqlSession 下的四大对象之一，parameterHandler，用于处理参数*/
     this.parameterHandler = configuration.newParameterHandler(mappedStatement, parameterObject, boundSql);
-    //创建sqlSession下的四大对象之一，resultSetHandler，用于处理返回结果集
+    /**创建sqlSession下的四大对象之一，resultSetHandler，用于处理返回结果集*/
     this.resultSetHandler = configuration.newResultSetHandler(executor, mappedStatement, rowBounds, parameterHandler, resultHandler, boundSql);
   }
 
@@ -109,9 +109,11 @@ public abstract class BaseStatementHandler implements StatementHandler {
     ErrorContext.instance().sql(boundSql.getSql());
     Statement statement = null;
     try {
-      //初始化一个statement，比如经常使用到的PreparedStatement
+      /**初始化一个statement，比如经常使用到的PreparedStatement*/
       statement = instantiateStatement(connection);
+      /**设置PreparedStatement超时时间*/
       setStatementTimeout(statement, transactionTimeout);
+      /**设置查询结果集大小*/
       setFetchSize(statement);
       return statement;
     } catch (SQLException e) {

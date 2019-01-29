@@ -39,7 +39,13 @@ public class PreparedStatementHandler extends BaseStatementHandler {
   public PreparedStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
     super(executor, mappedStatement, parameter, rowBounds, resultHandler, boundSql);
   }
-  //真正执行sql语句的地方
+
+  /**
+   * 真正执行sql语句的地方
+   * @param statement PreparedStatement
+   * @return
+   * @throws SQLException
+   */
   @Override
   public int update(Statement statement) throws SQLException {
     PreparedStatement ps = (PreparedStatement) statement;

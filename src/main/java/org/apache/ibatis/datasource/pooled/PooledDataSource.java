@@ -33,6 +33,7 @@ import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 
 /**
+ * 这是mybatis数据库对象的装饰类
  * This is a simple, synchronous, thread-safe database connection pool.
  *
  * @author Clinton Begin
@@ -42,7 +43,7 @@ public class PooledDataSource implements DataSource {
   private static final Log log = LogFactory.getLog(PooledDataSource.class);
 
   private final PoolState state = new PoolState(this);
-
+  /**被装饰的DataSource对象*/
   private final UnpooledDataSource dataSource;
 
   // OPTIONAL CONFIGURATION FIELDS

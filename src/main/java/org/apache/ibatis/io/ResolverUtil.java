@@ -79,6 +79,7 @@ public class ResolverUtil<T> {
    * that this test will match the parent type itself if it is presented for matching.
    */
   public static class IsA implements Test {
+    /**object*/
     private Class<?> parent;
 
     /** Constructs an IsA test using the supplied Class as the parent class/interface. */
@@ -123,6 +124,7 @@ public class ResolverUtil<T> {
   }
 
   /** The set of matches being accumulated. */
+  /**匹配到的class*/
   private Set<Class<? extends T>> matches = new HashSet<>();
 
   /**
@@ -214,18 +216,20 @@ public class ResolverUtil<T> {
    *        classes, e.g. {@code net.sourceforge.stripes}
    */
   /**
-   * 根据包名获取
-   * @param test
+   * 根据包名获取，可以看到mybatis的根据包扫描就是获取包名下的
+   * 所有class文件
+   * @param test  IsA
    * @param packageName
    * @return
    */
   public ResolverUtil<T> find(Test test, String packageName) {
+    /**获取包名路径*/
     String path = getPackagePath(packageName);
-
     try {
       List<String> children = VFS.getInstance().list(path);
       for (String child : children) {
         if (child.endsWith(".class")) {
+          /**加入class的名称，估计后面要根据这个字符串进行反射*/
           addIfMatching(test, child);
         }
       }
@@ -254,6 +258,9 @@ public class ResolverUtil<T> {
    * @param fqn the fully qualified name of a class
    */
   @SuppressWarnings("unchecked")
+  /**
+   * 如果匹配则增加
+   */
   protected void addIfMatching(Test test, String fqn) {
     try {
       String externalName = fqn.substring(0, fqn.indexOf('.')).replace('/', '.');

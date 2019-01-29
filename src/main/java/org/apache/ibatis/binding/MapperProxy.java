@@ -38,11 +38,11 @@ import org.apache.ibatis.session.SqlSession;
 public class MapperProxy<T> implements InvocationHandler, Serializable {
 
   private static final long serialVersionUID = -6424540398559729838L;
-  //创建当前mapperProxy的代理
+  /**DefaultSqlSession*/
   private final SqlSession sqlSession;
-  //mapper class类型
+  /**mapper 接口类型，这个主要用于创建jdk动态代理用的*/
   private final Class<T> mapperInterface;
-  //方法缓存
+  /**这个应该是需要代理的方法*/
   private final Map<Method, MapperMethod> methodCache;
 
   public MapperProxy(SqlSession sqlSession, Class<T> mapperInterface, Map<Method, MapperMethod> methodCache) {
@@ -62,7 +62,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     try {
-      //判断是不是Object的基础方法，如果是Object基础方法，则直接跳过
+      /**判断是不是Object的基础方法，如果是Object基础方法，则直接跳过*/
       if (Object.class.equals(method.getDeclaringClass())) {
         return method.invoke(this, args);
       } else if (isDefaultMethod(method)) {
@@ -71,14 +71,19 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
     } catch (Throwable t) {
       throw ExceptionUtil.unwrapThrowable(t);
     }
-    //方法的缓存处理
+    /**方法的缓存处理*/
     final MapperMethod mapperMethod = cachedMapperMethod(method);
-    //核心方法，对真正的sqlSession进行包装调用
+    /**核心方法，对真正的sqlSession进行包装调用*/
     return mapperMethod.execute(sqlSession, args);
   }
 
+  /**
+   * 缓存MapperMethod对象
+   * @param method 真正的方法对象
+   * @return
+   */
   private MapperMethod cachedMapperMethod(Method method) {
-    //创建一个mapper代理方法对象
+    /**创建一个mapper代理方法对象*/
     return methodCache.computeIfAbsent(method, k -> new MapperMethod(mapperInterface, method, sqlSession.getConfiguration()));
   }
 

@@ -54,11 +54,10 @@ public class SimpleExecutor extends BaseExecutor {
     try {
       Configuration configuration = ms.getConfiguration();
       /**
-       * 创建一个RoutingStatementHandler，这是SqlSession下的四大对象之一
-       * 用于获取statement
+       * 创建一个RoutingStatementHandler，这是SqlSession下的四大对象之一，用于获取statement
        */
       StatementHandler handler = configuration.newStatementHandler(this, ms, parameter, RowBounds.DEFAULT, null, null);
-      //获取一个Statement
+      /**获取一个Statement*/
       stmt = prepareStatement(handler, ms.getStatementLog());
       return handler.update(stmt);
     } finally {
@@ -102,17 +101,24 @@ public class SimpleExecutor extends BaseExecutor {
   public List<BatchResult> doFlushStatements(boolean isRollback) throws SQLException {
     return Collections.emptyList();
   }
-  //构建一个statement，用于数据查询
+
+  /**
+   * 获取一个PreparedStatement
+   * @param handler
+   * @param statementLog
+   * @return
+   * @throws SQLException
+   */
   private Statement prepareStatement(StatementHandler handler, Log statementLog) throws SQLException {
     Statement stmt;
-    //获取一个connection
+    /**获取一个connection*/
     Connection connection = getConnection(statementLog);
     /**
      * 所以我们的分页拦截器是加在这个方法上的，StatementHandler，方法名为prepare
      * 这个方法的目的是获取一个Statement，比如PreparedStatement
      */
     stmt = handler.prepare(connection, transaction.getTimeout());
-    //参数初始化，这里就是使用到创建StatementHandler时创建的ParameterHandler
+    /**参数初始化，这里就是使用到创建StatementHandler时创建的ParameterHandler*/
     handler.parameterize(stmt);
     return stmt;
   }

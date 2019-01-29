@@ -27,9 +27,11 @@ import org.apache.ibatis.cache.Cache;
  * 刷新间隔时间，再执行get、put的时候先判断上次刷新时间+时间间隔是否大于当前时间，若大于当前时间，那么情况缓存
  */
 public class ScheduledCache implements Cache {
-
+  /**被装饰的缓存类*/
   private final Cache delegate;
+  /**刷新时间间隔*/
   protected long clearInterval;
+  /**上次刷新时间*/
   protected long lastClear;
 
   public ScheduledCache(Cache delegate) {

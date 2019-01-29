@@ -53,10 +53,12 @@ import org.apache.ibatis.type.TypeHandler;
  * @author Clinton Begin
  */
 public class MapperBuilderAssistant extends BaseBuilder {
-  //当前的nameSpace，也就是dao的地址
+  /**当前的nameSpace，也就是dao的地址*/
   private String currentNamespace;
-  private final String resource; //mapper的字符串路径
-  private Cache currentCache;//当前mapper对象的缓存对象
+  /**mapper的字符串路径*/
+  private final String resource;
+  /**当前mapper对象的缓存对象*/
+  private Cache currentCache;
   private boolean unresolvedCacheRef; // issue #676
 
   public MapperBuilderAssistant(Configuration configuration, String resource) {
@@ -215,7 +217,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
     extend = applyCurrentNamespace(extend, true);
 
     if (extend != null) {
-      //继承的ResultMap不存在，抛出异常
+      //继承的ResultMap不存在，抛出未解析完成异常，这个异常后面会用到
       if (!configuration.hasResultMap(extend)) {
         throw new IncompleteElementException("Could not find a parent resultmap with id '" + extend + "'");
       }
@@ -286,7 +288,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
 
   /**
    * 构建MappedStatement
-   * @param id dao的方法名+"!selectKey"
+   * @param id dao的方法名
    * @param sqlSource sqlSource，里面包含sql的Node对象，可以根据getBoundSql获取sql语句
    * @param statementType
    * @param sqlCommandType sql语句类型
@@ -350,13 +352,13 @@ public class MapperBuilderAssistant extends BaseBuilder {
         .lang(lang)
         .resultOrdered(resultOrdered)
         .resultSets(resultSets)
-        //获取ResultMap
+        /**获取ResultMap*/
         .resultMaps(getStatementResultMaps(resultMap, resultType, id))
         .resultSetType(resultSetType)
         .flushCacheRequired(valueOrDefault(flushCache, !isSelect))
         .useCache(valueOrDefault(useCache, isSelect))
         .cache(currentCache);
-    //获取参数Map
+    /**获取参数Map*/
     ParameterMap statementParameterMap = getStatementParameterMap(parameterMap, parameterType, id);
     if (statementParameterMap != null) {
       statementBuilder.parameterMap(statementParameterMap);
@@ -384,17 +386,17 @@ public class MapperBuilderAssistant extends BaseBuilder {
       String statementId) {
     parameterMapName = applyCurrentNamespace(parameterMapName, true);
     ParameterMap parameterMap = null;
-    //先解析paramterMap，这个不经常使用
+    /**先解析paramterMap，这个不经常使用*/
     if (parameterMapName != null) {
       try {
         parameterMap = configuration.getParameterMap(parameterMapName);
       } catch (IllegalArgumentException e) {
         throw new IncompleteElementException("Could not find parameter map " + parameterMapName, e);
       }
-      //再解析parameterType，这个经常使用
+      /**再解析parameterType，这个经常使用*/
     } else if (parameterTypeClass != null) {
       List<ParameterMapping> parameterMappings = new ArrayList<>();
-      //构建器模式创建parameterMap
+      /**构建器模式创建parameterMap*/
       parameterMap = new ParameterMap.Builder(
           configuration,
           statementId + "-Inline",
@@ -448,7 +450,8 @@ public class MapperBuilderAssistant extends BaseBuilder {
    * @param javaType 这个字段的返回类型
    * @param jdbcType
    * @param nestedSelect association、collection的select属性
-   * @param nestedResultMap  association、collection的 resultMap属性或者association、collection的select为空时的resultMap的id
+   * @param nestedResultMap  association、collection的 resultMap属性或者association、collection的select为空时解析完成的
+   *                         的resultMap的id
    * @param notNullColumn
    * @param columnPrefix
    * @param typeHandler

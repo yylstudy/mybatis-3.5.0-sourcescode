@@ -43,13 +43,13 @@ import org.apache.ibatis.logging.LogFactory;
 public class TransactionalCache implements Cache {
 
   private static final Log log = LogFactory.getLog(TransactionalCache.class);
-  //缓存对象
+  /**真正的缓存对象*/
   private final Cache delegate;
-  //是否在提交的时候清空
+  /**是否在提交的时候清空*/
   private boolean clearOnCommit;
-  //这个就是事务缓存存放的键值对
+  /**这个就是事务缓存存放的键值对*/
   private final Map<Object, Object> entriesToAddOnCommit;
-  //存放未击中缓存的key
+  /**存放未击中缓存的key*/
   private final Set<Object> entriesMissedInCache;
 
   public TransactionalCache(Cache delegate) {
@@ -68,7 +68,12 @@ public class TransactionalCache implements Cache {
   public int getSize() {
     return delegate.getSize();
   }
-  //获取键值对
+
+  /**
+   * 从缓存中获取
+   * @param key The key
+   * @return
+   */
   @Override
   public Object getObject(Object key) {
     // issue #116

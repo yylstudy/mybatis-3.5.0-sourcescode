@@ -24,11 +24,11 @@ import org.apache.ibatis.session.Configuration;
  * @author Clinton Begin
  */
 public class ParameterMap {
-  //dao的方法名+"!selectKey"+"-Inline"
+  /**dao的方法名+"!selectKey"+"-Inline"*/
   private String id;
-  //参数对应的java类型
+  /**参数对应的java类型*/
   private Class<?> type;
-  //参数值，这个到底在哪里进行赋值（这个应该是xml中解析parameterMap标签时，会在这里赋值）
+  /**参数值，这个到底在哪里进行赋值（这个应该是xml中解析parameterMap标签时，会在这里赋值）*/
   private List<ParameterMapping> parameterMappings;
 
   private ParameterMap() {

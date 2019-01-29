@@ -41,13 +41,13 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
  * 默认的ParameterHandler的实现
  */
 public class DefaultParameterHandler implements ParameterHandler {
-  //typeHandler注册器
+  /**typeHandler注册器*/
   private final TypeHandlerRegistry typeHandlerRegistry;
-  //mappedStatement
+  /**mappedStatement*/
   private final MappedStatement mappedStatement;
-  //参数名和值得键值对
+  /**参数名和值得键值对，也有可能是参数本身*/
   private final Object parameterObject;
-  //要执行的sql对象
+  /**要执行的sql对象*/
   private final BoundSql boundSql;
   private final Configuration configuration;
 
@@ -77,18 +77,21 @@ public class DefaultParameterHandler implements ParameterHandler {
         ParameterMapping parameterMapping = parameterMappings.get(i);
         if (parameterMapping.getMode() != ParameterMode.OUT) {
           Object value;
-          //获取要注入参数的key
+          /**获取要注入参数的key*/
           String propertyName = parameterMapping.getProperty();
-          if (boundSql.hasAdditionalParameter(propertyName)) { // issue #448 ask first for additional params
+          if (boundSql.hasAdditionalParameter(propertyName)) {
             value = boundSql.getAdditionalParameter(propertyName);
           } else if (parameterObject == null) {
             value = null;
-          } else if (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) {
+          }
+          /**这里需要注意的是如果不是自定义的JavaBean，（像String，Integer）这种，Configuration中存在对应类型的
+           * TypeHandler，所以就直接将这个参数返回作为参数本身*/
+          else if (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) {
             value = parameterObject;
           } else {
-            //获取参数键值对的Map
+            /**获取参数对象的MetaObject*/
             MetaObject metaObject = configuration.newMetaObject(parameterObject);
-            //根据参数键值对的Map获取其值
+            /**根据参数键值对的Map获取其值*/
             value = metaObject.getValue(propertyName);
           }
           TypeHandler typeHandler = parameterMapping.getTypeHandler();

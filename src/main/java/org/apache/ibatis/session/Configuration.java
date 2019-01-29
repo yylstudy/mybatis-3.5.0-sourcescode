@@ -95,7 +95,7 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
  * @author Clinton Begin
  */
 public class Configuration {
-  //环境
+  /**environment对象*/
   protected Environment environment;
   //是否允许在嵌套语句中使用分页，默认是false
   protected boolean safeRowBoundsEnabled;
@@ -103,7 +103,7 @@ public class Configuration {
   protected boolean safeResultHandlerEnabled = true;
   //是否开启驼峰的命名规则，默认是false
   protected boolean mapUnderscoreToCamelCase;
-  //当aggressiveLazyLoading为true时，就是使用层级延迟加载，改为false就是按需延迟加载
+  /**当aggressiveLazyLoading为true时，就是使用层级延迟加载，改为false就是按需延迟加载*/
   protected boolean aggressiveLazyLoading;
   //是否允许单一语句返回多个结果集
   protected boolean multipleResultSetsEnabled = true;
@@ -111,7 +111,7 @@ public class Configuration {
   protected boolean useGeneratedKeys;
   //使用列标签代替列名
   protected boolean useColumnLabel = true;
-  //默认开启缓存
+  /**默认开启缓存，这个是二级缓存*/
   protected boolean cacheEnabled = true;
   //指定当结果集中值为null的时候，是否调用映射对象的setter方法，默认值是false
   protected boolean callSettersOnNulls;
@@ -124,7 +124,7 @@ public class Configuration {
    * SLF4J | LOG4J | LOG4J2 | JDK_LOGGING | COMMONS_LOGGING | STDOUT_LOGGING | NO_LOGGING
    */
   protected Class <? extends Log> logImpl;
-  //vfs的Class对象
+  /**settings下的vfs的Class对象*/
   protected Class <? extends VFS> vfsImpl;
   //本地缓存加载范围，默认是session，若配置为STATEMENT，对相同的sqlsession将不会使用缓存
   protected LocalCacheScope localCacheScope = LocalCacheScope.SESSION;
@@ -132,11 +132,11 @@ public class Configuration {
   protected JdbcType jdbcTypeForNull = JdbcType.OTHER;
   //指定哪个对象的方法触发一次延迟加载
   protected Set<String> lazyLoadTriggerMethods = new HashSet<>(Arrays.asList("equals", "clone", "hashCode", "toString"));
-  //设置超时时间，它决定驱动等待数据库响应的秒数
+  /**设置超时时间，它决定驱动等待数据库响应的秒数*/
   protected Integer defaultStatementTimeout;
-  //结果集取值大小
+  /**结果集取值大小*/
   protected Integer defaultFetchSize;
-  //默认执行器类型
+  /**默认执行器类型*/
   protected ExecutorType defaultExecutorType = ExecutorType.SIMPLE;
   /**
    * 是否开启自动映射列到指定属性：有三个值：NONE表示取消自动映射，PARTIAL表示只会自动映射到没有定义嵌套结果集映射的结果集
@@ -165,22 +165,22 @@ public class Configuration {
    * @see <a href='https://code.google.com/p/mybatis/issues/detail?id=300'>Issue 300 (google code)</a>
    */
   protected Class<?> configurationFactory;
-  //已经注册过得Mapper对应的dao解析器
+  /**已经注册过得Mapper对应的dao解析器*/
   protected final MapperRegistry mapperRegistry = new MapperRegistry(this);
-  //自定义拦截器链
+  /**自定义拦截器链*/
   protected final InterceptorChain interceptorChain = new InterceptorChain();
-  //typeHandler注册器
+  /**typeHandler注册器*/
   protected final TypeHandlerRegistry typeHandlerRegistry = new TypeHandlerRegistry();
-  //别名注册器
+  /**别名注册器*/
   protected final TypeAliasRegistry typeAliasRegistry = new TypeAliasRegistry();
-  //语言注册器
+  /**语言驱动注册器*/
   protected final LanguageDriverRegistry languageRegistry = new LanguageDriverRegistry();
   /**
    * sql的映射关系，key是daoName+id value是MappedStatement，MappedStatement
    * 中包含很多信息，例如缓存对象实例，要执行的SqlSource等
    */
   protected final Map<String, MappedStatement> mappedStatements = new StrictMap<>("Mapped Statements collection");
-  //存放缓存对象，key是dao的类名，值是具体的缓存类（被装饰的类）
+  /**存放缓存对象，key是dao的类名，值是具体的缓存类（被装饰的类）*/
   protected final Map<String, Cache> caches = new StrictMap<>("Caches collection");
   /**
    * 存放所有的resultMap id和ResultMap的映射关系
@@ -188,15 +188,15 @@ public class Configuration {
    */
   protected final Map<String, ResultMap> resultMaps = new StrictMap<>("Result Maps collection");
   protected final Map<String, ParameterMap> parameterMaps = new StrictMap<>("Parameter Maps collection");
-  //存放特殊的解析，如selectKey
+  /**存放特殊的解析，selectKey*/
   protected final Map<String, KeyGenerator> keyGenerators = new StrictMap<>("Key Generators collection");
-  //存放已经解析过的mapper文件的字符串路径
+  /**存放已经解析过的mapper文件的字符串路径*/
   protected final Set<String> loadedResources = new HashSet<>();
-  //存放全局<sql> 元素的映射集合，daoName+"."+id-->XNode
+  /**存放全局<sql> 元素的映射集合，daoName+"."+id-->XNode*/
   protected final Map<String, XNode> sqlFragments = new StrictMap<>("XML fragments parsed from previous mappers");
   //存放异常解析的XMLStatementBuilder
   protected final Collection<XMLStatementBuilder> incompleteStatements = new LinkedList<>();
-  //存放异常解析的Cache
+  /**存放异常解析的CacheRef，这是因为有可能ref指向的cache还未解析*/
   protected final Collection<CacheRefResolver> incompleteCacheRefs = new LinkedList<>();
   //存放异常解析的ResultMap
   protected final Collection<ResultMapResolver> incompleteResultMaps = new LinkedList<>();
@@ -216,7 +216,10 @@ public class Configuration {
     this();
     this.environment = environment;
   }
-  //填充一些构造器属性值
+
+  /**
+   * 注册一些全局用到的别名
+   */
   public Configuration() {
     typeAliasRegistry.registerAlias("JDBC", JdbcTransactionFactory.class);
     typeAliasRegistry.registerAlias("MANAGED", ManagedTransactionFactory.class);
@@ -628,7 +631,7 @@ public class Configuration {
   /**
    * 构建一个statementHandler，这是sqlSession下的四大对象之一，其它三个是Executor,ParameterHandler,ResultHandler
    * @param executor 执行器
-   * @param mappedStatement 要执行的方法对象
+   * @param mappedStatement MappedStatement
    * @param parameterObject 参数名和参数值的映射关系，Map<String,Object>，
    *      *                  若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身
    * @param rowBounds RowBounds
@@ -637,9 +640,9 @@ public class Configuration {
    * @return
    */
   public StatementHandler newStatementHandler(Executor executor,MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
-    //构建一个RoutingStatementHandler 这是真正的StatementHandler的装饰类
+    /**构建一个RoutingStatementHandler 这是真正的StatementHandler的装饰类*/
     StatementHandler statementHandler = new RoutingStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
-    //判断是否执行拦截器，是否需要进行代理
+    /**判断是否执行拦截器，是否需要进行代理*/
     statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);
     return statementHandler;
   }
@@ -663,15 +666,15 @@ public class Configuration {
     } else if (ExecutorType.REUSE == executorType) {
       executor = new ReuseExecutor(this, transaction);
     } else {
-      //创建一个SIMPLE的执行器
+      /**创建一个SIMPLE的执行器*/
       executor = new SimpleExecutor(this, transaction);
     }
-    //若是开启缓存
+    /**若是开启缓存*/
     if (cacheEnabled) {
-      //执行器装饰类
+      /**缓存执行器装饰类*/
       executor = new CachingExecutor(executor);
     }
-    //判断是否存在作用于Executor的拦截器
+    /**判断是否存在作用于Executor的拦截器*/
     executor = (Executor) interceptorChain.pluginAll(executor);
     return executor;
   }

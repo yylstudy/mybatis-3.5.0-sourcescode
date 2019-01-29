@@ -19,12 +19,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
+ * 方法执行器
  * @author Clinton Begin
  */
 public class MethodInvoker implements Invoker {
-
-  private final Class<?> type;//get方法的返回类型或者set方法的参数类型
-  private final Method method;//method对象
+  /**方法（get、set）对应的属性的class类型*/
+  private final Class<?> type;
+  /**方法对象*/
+  private final Method method;
 
   public MethodInvoker(Method method) {
     this.method = method;

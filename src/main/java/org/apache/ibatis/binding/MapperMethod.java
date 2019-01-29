@@ -42,15 +42,15 @@ import java.util.*;
  * @author Kazuki Shimizu
  */
 public class MapperMethod {
-  //sql命令对象
+  /**sql命令对象*/
   private final SqlCommand command;
-  //方法的各种信息、返回类型等
+  /**方法签名对象*/
   private final MethodSignature method;
 
   public MapperMethod(Class<?> mapperInterface, Method method, Configuration config) {
-    //构建一个SqlCommand
+    /**构建一个SqlCommand*/
     this.command = new SqlCommand(config, mapperInterface, method);
-    //构建一个MethodSignature
+    /**构建一个方法签名*/
     this.method = new MethodSignature(config, mapperInterface, method);
   }
 
@@ -237,19 +237,19 @@ public class MapperMethod {
   }
 
   public static class SqlCommand {
-    //MappedStatement的id值
+    /**MappedStatement的id值，也就是daoName.methodName*/
     private final String name;
     //sql命令类型：select、insert等
     /**
      * 构建一个sqlCommand
      * @param configuration
-     * @param mapperInterface
-     * @param method
+     * @param mapperInterface 接口
+     * @param method 被代理的方法对象
      */
     public SqlCommand(Configuration configuration, Class<?> mapperInterface, Method method) {
       final String methodName = method.getName();
       final Class<?> declaringClass = method.getDeclaringClass();
-      //获取MappedStatement
+      /**获取MappedStatement*/
       MappedStatement ms = resolveMappedStatement(mapperInterface, methodName, declaringClass,
           configuration);
       if (ms == null) {
@@ -268,7 +268,7 @@ public class MapperMethod {
         }
       }
     }
-
+    /**SqlCommand类型*/
     private final SqlCommandType type;
 
     public String getName() {
@@ -290,7 +290,7 @@ public class MapperMethod {
     private MappedStatement resolveMappedStatement(Class<?> mapperInterface, String methodName,
         Class<?> declaringClass, Configuration configuration) {
       String statementId = mapperInterface.getName() + "." + methodName;
-      //若在配置类中已经找到该MappedStatement，直接返回
+      /**根据daoName.methodName 查找之前注册过的MappedStatement*/
       if (configuration.hasStatement(statementId)) {
         return configuration.getMappedStatement(statementId);
       } else if (mapperInterface.equals(declaringClass)) {
@@ -311,25 +311,25 @@ public class MapperMethod {
   }
 
   public static class MethodSignature {
-    //是否返回多条
+    /**是否返回多条，也就是返回类型是否是数组或者集合*/
     private final boolean returnsMany;
-    //mapKey是否为空
+    /**mapKey是否为空*/
     private final boolean returnsMap;
-    //返回类型是否void类型
+    /**返回类型是否void类型*/
     private final boolean returnsVoid;
-    //方法返回类型是否是Cursor
+    /**方法返回类型是否是Cursor*/
     private final boolean returnsCursor;
-    //方法返回类型是否是Optional
+    /**方法返回类型是否是Optional*/
     private final boolean returnsOptional;
-    //方法返回类型
+    /**方法返回类型*/
     private final Class<?> returnType;
-    //@MapKey注解的值
+    /**@MapKey 注解的值*/
     private final String mapKey;
-    //参数类型为ResultHandler或其子类的下标
+    /**参数类型为ResultHandler或其子类的下标*/
     private final Integer resultHandlerIndex;
-    //参数类型为RowBounds或其子类的下标
+    /**参数类型为RowBounds或其子类的下标*/
     private final Integer rowBoundsIndex;
-    //参数名称解析器
+    /**参数名称解析器*/
     private final ParamNameResolver paramNameResolver;
 
     /**
@@ -339,7 +339,7 @@ public class MapperMethod {
      * @param method 被代理方法
      */
     public MethodSignature(Configuration configuration, Class<?> mapperInterface, Method method) {
-      //获取返回类型Type
+      /**获取返回类型Type*/
       Type resolvedReturnType = TypeParameterResolver.resolveReturnType(method, mapperInterface);
       if (resolvedReturnType instanceof Class<?>) {
         this.returnType = (Class<?>) resolvedReturnType;
@@ -354,11 +354,11 @@ public class MapperMethod {
       this.returnsOptional = Optional.class.equals(this.returnType);
       this.mapKey = getMapKey(method);
       this.returnsMap = this.mapKey != null;
-      //参数类型为RowBounds或其子类的下标
+      /**参数类型为RowBounds或其子类的下标*/
       this.rowBoundsIndex = getUniqueParamIndex(method, RowBounds.class);
-      //参数类型为ResultHandler或其子类的下标
+      /**参数类型为ResultHandler或其子类的下标*/
       this.resultHandlerIndex = getUniqueParamIndex(method, ResultHandler.class);
-      //参数名称解析器
+      /**参数名称解析器*/
       this.paramNameResolver = new ParamNameResolver(configuration, method);
     }
 
@@ -437,7 +437,7 @@ public class MapperMethod {
 
     private String getMapKey(Method method) {
       String mapKey = null;
-      //若方法的返回类型是Map或者其子类
+      /**若方法的返回类型是Map或者其子类*/
       if (Map.class.isAssignableFrom(method.getReturnType())) {
         //获取方法上@MapKey的值返回
         final MapKey mapKeyAnnotation = method.getAnnotation(MapKey.class);

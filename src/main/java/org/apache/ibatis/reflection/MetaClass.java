@@ -30,21 +30,22 @@ import org.apache.ibatis.reflection.property.PropertyTokenizer;
  * @author Clinton Begin
  */
 public class MetaClass {
-  //反射工厂，默认实现类是 DefaultReflectorFactory
+  /**反射工厂，默认实现类是 DefaultReflectorFactory*/
   private final ReflectorFactory reflectorFactory;
-  //反射器
+  /**反射器*/
   private final Reflector reflector;
 
   private MetaClass(Class<?> type, ReflectorFactory reflectorFactory) {
     this.reflectorFactory = reflectorFactory;
     this.reflector = reflectorFactory.findForClass(type);
   }
-  //获取对象的MetaClass对象
+  /**获取对象的MetaClass对象*/
   public static MetaClass forClass(Class<?> type, ReflectorFactory reflectorFactory) {
     return new MetaClass(type, reflectorFactory);
   }
 
   public MetaClass metaClassForProperty(String name) {
+    /**先从反射器中获取该属性的get方法的（因为要get这个属性才能对这个属性的属性进行判断）class*/
     Class<?> propType = reflector.getGetterType(name);
     return MetaClass.forClass(propType, reflectorFactory);
   }
@@ -131,17 +132,28 @@ public class MetaClass {
     }
     return null;
   }
-  //校验反射器是否包含name元素的setter方法
+
+  /**
+   * 校验该源class对象是否含有这个属性名的set方法
+   * @param name
+   * @return
+   */
   public boolean hasSetter(String name) {
+    /**创建一个属性描述器*/
     PropertyTokenizer prop = new PropertyTokenizer(name);
+    /**当存在xxx.yy这种情况下就要先判断当前类是否拥有xxx属性，然后判断 xxx是否拥有yy属性*/
     if (prop.hasNext()) {
+      /**反射器包含xxx*/
       if (reflector.hasSetter(prop.getName())) {
+        /**获取xxx的MetaClass对象*/
         MetaClass metaProp = metaClassForProperty(prop.getName());
+        /**校验xxx对象是否包含yy属性*/
         return metaProp.hasSetter(prop.getChildren());
       } else {
         return false;
       }
     } else {
+      /**不存在.分隔符，也就是子对象，那么就判断反射器是否包含该属性*/
       return reflector.hasSetter(prop.getName());
     }
   }

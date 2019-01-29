@@ -26,12 +26,15 @@ import java.util.Set;
 import org.apache.ibatis.reflection.ExceptionUtil;
 
 /**
+ * 这个就是JDK实现的正常的动态代理的写法
  * @author Clinton Begin
  */
 public class Plugin implements InvocationHandler {
-
+  /**被代理的目标对象*/
   private final Object target;
+  /**拦截器*/
   private final Interceptor interceptor;
+  /**被代理的方法*/
   private final Map<Class<?>, Set<Method>> signatureMap;
 
   private Plugin(Object target, Interceptor interceptor, Map<Class<?>, Set<Method>> signatureMap) {
@@ -111,6 +114,7 @@ public class Plugin implements InvocationHandler {
     return signatureMap;
   }
 
+
   private static Class<?>[] getAllInterfaces(Class<?> type, Map<Class<?>, Set<Method>> signatureMap) {
     Set<Class<?>> interfaces = new HashSet<>();
     while (type != null) {
@@ -123,5 +127,4 @@ public class Plugin implements InvocationHandler {
     }
     return interfaces.toArray(new Class<?>[interfaces.size()]);
   }
-
 }

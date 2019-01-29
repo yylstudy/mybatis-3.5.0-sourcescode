@@ -32,16 +32,17 @@ import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.managed.ManagedTransactionFactory;
 
 /**
+ * 默认的SqlSessionFactory的实现类
  * @author Clinton Begin
  */
 public class DefaultSqlSessionFactory implements SqlSessionFactory {
-  //存放解析完成的Configuration对象
+  /**全局唯一配置器*/
   private final Configuration configuration;
 
   public DefaultSqlSessionFactory(Configuration configuration) {
     this.configuration = configuration;
   }
-
+  /**开启一个OpenSession*/
   @Override
   public SqlSession openSession() {
     return openSessionFromDataSource(configuration.getDefaultExecutorType(), null, false);
@@ -98,11 +99,11 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
     Transaction tx = null;
     try {
       final Environment environment = configuration.getEnvironment();
-      //创建事务工厂，默认是ManagedTransactionFactory
+      /**创建事务工厂，默认是ManagedTransactionFactory，常用的有JdbcTransactionFactory*/
       final TransactionFactory transactionFactory = getTransactionFactoryFromEnvironment(environment);
-      //创建一个事务
+      /**创建一个事务JdbcTransaction*/
       tx = transactionFactory.newTransaction(environment.getDataSource(), level, autoCommit);
-      //创建一个执行器
+      /**创建一个执行器SimpleExecutor*/
       final Executor executor = configuration.newExecutor(tx, execType);
       return new DefaultSqlSession(configuration, executor, autoCommit);
     } catch (Exception e) {

@@ -81,10 +81,11 @@ public class SqlSessionFactoryBuilder {
    */
   public SqlSessionFactory build(InputStream inputStream, String environment, Properties properties) {
     try {
-      //构建XmlConfigureBuilder
+      /**构建基于xml的xml配置构建器XmlConfigureBuilder*/
       XMLConfigBuilder parser = new XMLConfigBuilder(inputStream, environment, properties);
-      //创建一个DefaultSqlSessionFactory对象，build主要做的就是将解析完成的Configuration对象赋值给
-      //DefaultSqlSessionFactory对象
+      /**
+       * 创建一个DefaultSqlSessionFactory对象，build主要做的就是将解析
+       * 完成的Configuration对象赋值给DefaultSqlSessionFactory对象*/
       return build(parser.parse());
     } catch (Exception e) {
       throw ExceptionFactory.wrapException("Error building SqlSession.", e);

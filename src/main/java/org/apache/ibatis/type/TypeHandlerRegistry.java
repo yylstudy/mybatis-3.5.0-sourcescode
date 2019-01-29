@@ -55,10 +55,10 @@ import org.apache.ibatis.io.Resources;
 public final class TypeHandlerRegistry {
 
   private final Map<JdbcType, TypeHandler<?>> JDBC_TYPE_HANDLER_MAP = new EnumMap<>(JdbcType.class);
-  //存放 javaType-->jdbcType-->TypeHandler 映射关系
+  /**存放 javaType-->jdbcType-->TypeHandler 映射关系*/
   private final Map<Type, Map<JdbcType, TypeHandler<?>>> TYPE_HANDLER_MAP = new ConcurrentHashMap<>();
   private final TypeHandler<Object> UNKNOWN_TYPE_HANDLER = new UnknownTypeHandler(this);
-  //所有 typeHandlerClass 和typeHandler实例的映射关系
+  /**所有 typeHandlerClass 和typeHandler实例的映射关系*/
   private final Map<Class<?>, TypeHandler<?>> ALL_TYPE_HANDLERS_MAP = new HashMap<>();
 
   private static final Map<JdbcType, TypeHandler<?>> NULL_TYPE_HANDLER_MAP = Collections.emptyMap();

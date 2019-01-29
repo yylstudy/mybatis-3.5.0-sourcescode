@@ -33,12 +33,13 @@ import org.w3c.dom.NodeList;
  * @author Clinton Begin
  */
 public class XMLScriptBuilder extends BaseBuilder {
-  //节点
+  /**节点*/
   private final XNode context;
+  /**是否是动态的*/
   private boolean isDynamic;
-  //节点的参数类型
+  /**节点的参数类型*/
   private final Class<?> parameterType;
-  //动态sql语句几个标签的解析器配置
+  /**动态sql语句几个标签的解析器配置*/
   private final Map<String, NodeHandler> nodeHandlerMap = new HashMap<>();
 
   public XMLScriptBuilder(Configuration configuration, XNode context) {
@@ -70,7 +71,7 @@ public class XMLScriptBuilder extends BaseBuilder {
    * @return
    */
   public SqlSource parseScriptNode() {
-    //解析动态标签
+    /**解析动态标签*/
     MixedSqlNode rootSqlNode = parseDynamicTags(context);
     SqlSource sqlSource = null;
     if (isDynamic) {
@@ -90,30 +91,31 @@ public class XMLScriptBuilder extends BaseBuilder {
    */
   protected MixedSqlNode parseDynamicTags(XNode node) {
     List<SqlNode> contents = new ArrayList<>();
-    //获取所有子标签
+    /**获取所有子标签*/
     NodeList children = node.getNode().getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
-      //将node子节点转化为node的XNode子节点
+      /**将node子节点转化为node的XNode子节点*/
       XNode child = node.newXNode(children.item(i));
-      //如果节点标签是<CDATASection >或者是文本
+      /**如果节点标签是<CDATASection >或者是文本*/
       if (child.getNode().getNodeType() == Node.CDATA_SECTION_NODE || child.getNode().getNodeType() == Node.TEXT_NODE) {
         String data = child.getStringBody("");
         TextSqlNode textSqlNode = new TextSqlNode(data);
-        //若文本包含${}等，则是动态的sql，否则就是静态的sql
+        /**若文本包含${}等，则是动态的sql，否则就是静态的sql*/
         if (textSqlNode.isDynamic()) {
           contents.add(textSqlNode);
           isDynamic = true;
         } else {
           contents.add(new StaticTextSqlNode(data));
         }
-        //如果包含动态标签，则在动态标签库中寻找
-      } else if (child.getNode().getNodeType() == Node.ELEMENT_NODE) { // issue #628
+      }
+      /**如果包含动态标签，则在动态标签库中寻找*/
+      else if (child.getNode().getNodeType() == Node.ELEMENT_NODE) { // issue #628
         String nodeName = child.getNode().getNodeName();
         NodeHandler handler = nodeHandlerMap.get(nodeName);
         if (handler == null) {
           throw new BuilderException("Unknown element <" + nodeName + "> in SQL statement.");
         }
-        //将当前标签加入到contents中
+        /**将当前标签加入到contents中*/
         handler.handleNode(child, contents);
         isDynamic = true;
       }

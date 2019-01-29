@@ -49,14 +49,23 @@ public class PropertyParser {
   private PropertyParser() {
     // Prevent Instantiation
   }
-  //在全局变量中获取refId,refId可以写成表达式的形式，如${testsql}
+
+  /**
+   * 在全局变量中获取refId,refId可以写成表达式的形式，如${testsql}
+   * @param string refId
+   * @param variables 全局变量
+   * @return
+   */
   public static String parse(String string, Properties variables) {
+    /**创建变量表达式处理器*/
     VariableTokenHandler handler = new VariableTokenHandler(variables);
     GenericTokenParser parser = new GenericTokenParser("${", "}", handler);
     return parser.parse(string);
   }
 
+
   private static class VariableTokenHandler implements TokenHandler {
+    /**全局变量*/
     private final Properties variables;
     private final boolean enableDefaultValue;
     private final String defaultValueSeparator;
@@ -93,5 +102,4 @@ public class PropertyParser {
       return "${" + content + "}";
     }
   }
-
 }

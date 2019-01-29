@@ -34,39 +34,41 @@ import org.apache.ibatis.session.Configuration;
 
 /**
  * select、selectKey、insert、update、delete等在Java内的表现形式
+ *
  */
 public final class MappedStatement {
-  //mapper的字符串路径
+  /**mapper的字符串路径*/
   private String resource;
+  /**全局配置类*/
   private Configuration configuration;
-  //方法名 格式是daoName+方法名
+  /**方法名 格式是daoName+方法名*/
   private String id;
-  //查询结果集大小
+  /**查询结果集大小*/
   private Integer fetchSize;
-  //超时时间
+  /**超时时间*/
   private Integer timeout;
-  //构建StatementHandler将要选择的类型，默认是PREPARED
+  /**构建StatementHandler将要选择的类型，默认是PREPARED*/
   private StatementType statementType;
   private ResultSetType resultSetType;
-  //source对象，其中包含了sql的Node对象，可以根据getBoundSql获取要执行的sql语句
+  /**source对象，其中包含了sql的Node对象，可以根据getBoundSql获取要执行的sql语句*/
   private SqlSource sqlSource;
-  //当前sql的缓存对象
+  /**当前整个Mapper的缓存对象，这个是二级缓存*/
   private Cache cache;
-  //参数map，这个就是存放参数的对象，parameterMap和parameterType占其一
+  /**参数map，这个就是存放参数的对象，parameterMap和parameterType占其一*/
   private ParameterMap parameterMap;
-  //resultMap的结果集
+  /**resultMap的结果集*/
   private List<ResultMap> resultMaps;
-  //是否必须刷新缓存
+  /**是否必须刷新缓存*/
   private boolean flushCacheRequired;
-  //使用缓存
+  /**使用缓存*/
   private boolean useCache;
   private boolean resultOrdered;
-  //sql语句类型
+  /**sql语句类型*/
   private SqlCommandType sqlCommandType;
   //是否允许JDBC自动生成主键
   //Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE？？？这个如何获取selectKey的呢
   private KeyGenerator keyGenerator;
-  //selectKey映射到参数的属性字段名
+  /**selectKey映射到参数的属性字段名*/
   private String[] keyProperties;
   private String[] keyColumns;
   //association、collection的是否包含resultMap
@@ -74,6 +76,7 @@ public final class MappedStatement {
   private String databaseId;
   //log类型
   private Log statementLog;
+  /**语言驱动器XMLLanguageDriver*/
   private LanguageDriver lang;
   private String[] resultSets;
 
@@ -315,10 +318,10 @@ public final class MappedStatement {
    * @return
    */
   public BoundSql getBoundSql(Object parameterObject) {
-    //获取BoundSql对象
+    /**获取BoundSql对象*/
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
-    //一般参数集合这里的参数集合已经有了，因为刚才刚解析的staticSqlSource的BoundSql
+    /**如果parameterType为空，就从parameterMap中加载*/
     if (parameterMappings == null || parameterMappings.isEmpty()) {
       boundSql = new BoundSql(configuration, boundSql.getSql(), parameterMap.getParameterMappings(), parameterObject);
     }

@@ -45,9 +45,9 @@ public class ParamNameResolver {
    * <li>aMethod(int a, RowBounds rb, int b) -&gt; {{0, "0"}, {2, "1"}}</li>
    * </ul>
    */
-  //参数的下标和其参数名的关系
+  /**参数的下标和其参数名的关系*/
   private final SortedMap<Integer, String> names;
-  //当前方法参是否包含@Param注解
+  /**当前方法参是否包含@Param注解*/
   private boolean hasParamAnnotation;
 
   /**
@@ -56,7 +56,7 @@ public class ParamNameResolver {
    * @param method 被代理方法
    */
   public ParamNameResolver(Configuration config, Method method) {
-    //获取方法参数类型数组
+    /**获取方法参数类型数组*/
     final Class<?>[] paramTypes = method.getParameterTypes();
     /**
      * 获取方法参数注解
@@ -65,7 +65,7 @@ public class ParamNameResolver {
      */
     final Annotation[][] paramAnnotations = method.getParameterAnnotations();
     final SortedMap<Integer, String> map = new TreeMap<>();
-    //参数个数
+    /**参数个数*/
     int paramCount = paramAnnotations.length;
     // get names from @Param annotations
     for (int paramIndex = 0; paramIndex < paramCount; paramIndex++) {
@@ -144,14 +144,14 @@ public class ParamNameResolver {
    */
   public Object getNamedParams(Object[] args) {
     final int paramCount = names.size();
-    //参数为空，或者之前解析参数名称长度为0直接返回
+    /**参数为空，或者之前解析参数名称长度为0直接返回*/
     if (args == null || paramCount == 0) {
       return null;
-      //参数不存在@Param注解，并且参数个数为1
+      /**参数不存在@Param注解，并且参数个数为1*/
     } else if (!hasParamAnnotation && paramCount == 1) {
       return args[names.firstKey()];
     } else {
-      //参数名称和参数值的集合
+      /**参数名称和参数值的集合*/
       final Map<String, Object> param = new ParamMap<>();
       int i = 0;
       for (Map.Entry<Integer, String> entry : names.entrySet()) {

@@ -39,35 +39,35 @@ import org.apache.ibatis.reflection.invoker.SetFieldInvoker;
 import org.apache.ibatis.reflection.property.PropertyNamer;
 
 /**
- * This class represents a cached set of class definition information that
- * allows for easy mapping between property names and getter/setter methods.
- *
+ * 反射器
  * @author Clinton Begin
  */
 public class Reflector {
-
-  private final Class<?> type;//反射器反射类的类型
-  //可读属性名 包括get方法和非final、static属性的方法
+  /**反射器的class类型*/
+  private final Class<?> type;
+  /**可读的get方法和属性名的数组*/
   private final String[] readablePropertyNames;
-  //可写属性名 包括set方法和非final、static属性的方法
+  /**可写的set方法和其属性名的数组*/
   private final String[] writeablePropertyNames;
   /**
-   * set方法集合 属性名->MethodInvoker   MethodInvoker包含type、method
-   * 或者没有getset方法的属性名->SetFieldInvoker  SetFieldInvoker包含field
+   * set方法集合 属性名->MethodInvoker
+   * 或者不包含set方法的属性名->SetFieldInvoker的映射关系
    */
   private final Map<String, Invoker> setMethods = new HashMap<>();
-  //存放反射器的get 属性名->MethodInvoker   MethodInvoker包含type、method
+  /**get方法属性名和其方法执行器的映射集合 MethodInvoker
+   * 或者不包含get方法的属性和其属性执行器的集合 GetFieldInvoker
+   * */
   private final Map<String, Invoker> getMethods = new HashMap<>();
   /**
-   * set方法和返回类型的集合  属性名->参数类型
-   * 或者没有getset方法的属性名  属性名->属性类型
+   * 属性和其set方法的参数类型的映射关系
+   * 或者不包含set方法的属性名  属性名->属性Class
    */
   private final Map<String, Class<?>> setTypes = new HashMap<>();
-  //反射器的get方法的      属性名-> 返回类型
+  /**get方法返回类型*/
   private final Map<String, Class<?>> getTypes = new HashMap<>();
-  //默认构造函数
+  /**构造函数数组*/
   private Constructor<?> defaultConstructor;
-
+  /**get和set方法以及吴getset方法属性名 的大写和属性名的映射集合*/
   private Map<String, String> caseInsensitivePropertyMap = new HashMap<>();//大小写属性、方法不敏感的属性Map
   //构造Class属性对应的Reflector
   public Reflector(Class<?> clazz) {
@@ -94,7 +94,6 @@ public class Reflector {
       if (constructor.getParameterTypes().length == 0) {
         if (canControlMemberAccessible()) {
           try {
-            //关闭java权限检查
             constructor.setAccessible(true);
           } catch (Exception e) {
             // Ignored. This is only a final precaution, nothing we can do.
@@ -113,7 +112,7 @@ public class Reflector {
    */
   private void addGetMethods(Class<?> cls) {
     Map<String, List<Method>> conflictingGetters = new HashMap<>();
-    //获取所有符合要求的Method对象
+    //获取class的所有方法
     Method[] methods = getClassMethods(cls);
     for (Method method : methods) {
       if (method.getParameterTypes().length > 0) {
@@ -124,7 +123,7 @@ public class Reflector {
           || (name.startsWith("is") && name.length() > 2)) {
         //获取get方法 属性值
         name = PropertyNamer.methodToProperty(name);
-        //以name做key，List<Method>做值插入Map中
+        //以name做key也就是get方法的属性名，List<Method>做值插入Map中
         addMethodConflict(conflictingGetters, name, method);
       }
     }
@@ -134,6 +133,7 @@ public class Reflector {
 
   /**
    *      解决方法冲突（应该是解决一个属性上有多个get方法，并且这些方法的），这个取到的属性值是一样的，但是方法只需要获取一个
+   *      还有就是排除和接口父类重复的方法
    *      public List getusername() {
    *         return username;
    *     }
@@ -153,7 +153,9 @@ public class Reflector {
           winner = candidate;
           continue;
         }
+        /**上一个方法的返回类型*/
         Class<?> winnerType = winner.getReturnType();
+        /**当前方法的返回类型*/
         Class<?> candidateType = candidate.getReturnType();
         //两个方法返回类型一样
         if (candidateType.equals(winnerType)) {
@@ -163,17 +165,16 @@ public class Reflector {
                 "Illegal overloaded getter method with ambiguous type for property "
                     + propName + " in class " + winner.getDeclaringClass()
                     + ". This breaks the JavaBeans specification and can cause unpredictable results.");
-            //是boolean类型并且方法名是以is开头，淘汰上一个方法
-          } else if (candidate.getName().startsWith("is")) {
+
+          }
+          /**是boolean类型并且方法名是以is开头，淘汰上一个方法*/
+          else if (candidate.getName().startsWith("is")) {
             winner = candidate;
           }
-          /**
-           * isAssignableFrom是类型的比较，instanceof 是实例比较
-           * 判断winnerType是不是candidateType同一类型或者candidateType的子类或者子接口
-           */
-        } else if (candidateType.isAssignableFrom(winnerType)) {
-          // OK getter type is descendant
-          //抛弃类型大的方法，取到类型小的方法
+        }
+        /**抛弃类型大的方法*/
+        else if (candidateType.isAssignableFrom(winnerType)) {
+
         } else if (winnerType.isAssignableFrom(candidateType)) {
           winner = candidate;
         } else {
@@ -183,11 +184,15 @@ public class Reflector {
                   + ". This breaks the JavaBeans specification and can cause unpredictable results.");
         }
       }
-      //添加进缓存
       addGetMethod(propName, winner);
     }
   }
-  //添加get方法进缓存
+
+  /**
+   * 添加get方法进缓存
+   * @param name
+   * @param method
+   */
   private void addGetMethod(String name, Method method) {
     if (isValidPropertyName(name)) {
       getMethods.put(name, new MethodInvoker(method));
@@ -234,7 +239,7 @@ public class Reflector {
       ReflectionException exception = null;
       for (Method setter : setters) {
         Class<?> paramType = setter.getParameterTypes()[0];
-        //若get方法的返回类型和set方法的参数类型一直，直接返回
+        /**若get方法的返回类型和set方法的参数类型一致，说明这个方法就是这个属性最匹配的set方法*/
         if (paramType.equals(getterType)) {
           // should be the best match
           match = setter;
@@ -258,12 +263,20 @@ public class Reflector {
     }
   }
 
+  /**
+   * 选择最匹配的set方法
+   * @param setter1 上一个方法
+   * @param setter2 当前方法
+   * @param property
+   * @return
+   */
   private Method pickBetterSetter(Method setter1, Method setter2, String property) {
     if (setter1 == null) {
       return setter2;
     }
     Class<?> paramType1 = setter1.getParameterTypes()[0];
     Class<?> paramType2 = setter2.getParameterTypes()[0];
+    /**上一个方法的参数类型是当前方法参数类型的父类或者接口，那么返回当前接口*/
     if (paramType1.isAssignableFrom(paramType2)) {
       return setter2;
     } else if (paramType2.isAssignableFrom(paramType1)) {
@@ -274,6 +287,11 @@ public class Reflector {
         + paramType2.getName() + "'.");
   }
 
+  /**
+   * 添加set方法进缓存
+   * @param name
+   * @param method
+   */
   private void addSetMethod(String name, Method method) {
     if (isValidPropertyName(name)) {
       setMethods.put(name, new MethodInvoker(method));
@@ -308,31 +326,28 @@ public class Reflector {
    * @param clazz
    */
   private void addFields(Class<?> clazz) {
-    //获取当前类的所有属性
     Field[] fields = clazz.getDeclaredFields();
     for (Field field : fields) {
       if (canControlMemberAccessible()) {
         try {
-          //跳过权限校验
           field.setAccessible(true);
         } catch (Exception e) {
           // Ignored. This is only a final precaution, nothing we can do.
         }
       }
       if (field.isAccessible()) {
-        //当前属性不是set方法的属性
+        /**当前属性不是set方法的属性*/
         if (!setMethods.containsKey(field.getName())) {
           // issue #379 - removed the check for final because JDK 1.5 allows
           // modification of final fields through reflection (JSR-133). (JGB)
           // pr #16 - final static can only be set by the classloader
-          //返回该字段的java语言修饰符
           int modifiers = field.getModifiers();
           //该属性不是final并且是static的，则添加进setMethod
           if (!(Modifier.isFinal(modifiers) && Modifier.isStatic(modifiers))) {
             addSetField(field);
           }
         }
-        //当前属性不是get方法的属性
+        /**当前属性不是get方法的属性*/
         if (!getMethods.containsKey(field.getName())) {
           addGetField(field);
         }
@@ -416,7 +431,7 @@ public class Reflector {
        *  这里是过滤掉桥接方法，只选择实际的方法
        */
       if (!currentMethod.isBridge()) {
-        //根据method构建Map的key
+        //创建方法标识
         String signature = getSignature(currentMethod);
         // check to see if the method is already known
         // if it is known, then an extended class must have
@@ -425,7 +440,6 @@ public class Reflector {
         if (!uniqueMethods.containsKey(signature)) {
           if (canControlMemberAccessible()) {
             try {
-              //取消java的权限控制检查，私有方法也能被反射调用
               currentMethod.setAccessible(true);
             } catch (Exception e) {
               // Ignored. This is only a final precaution, nothing we can do.

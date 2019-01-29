@@ -27,10 +27,11 @@ import org.apache.ibatis.cache.Cache;
  * @author Clinton Begin
  */
 public class LruCache implements Cache {
-
-  private final Cache delegate;//缓存类
+  /**缓存类*/
+  private final Cache delegate;
+  /**缓存键集合*/
   private Map<Object, Object> keyMap;
-  //存放要删除的缓存的key值
+  /**存放将要删除的缓存的key值*/
   private Object eldestKey;
 
   public LruCache(Cache delegate) {
@@ -54,7 +55,6 @@ public class LruCache implements Cache {
       private static final long serialVersionUID = 4267176411845948333L;
 
       /**
-       * 模板方法模式
        * 通过查看LinkedHashMap可知，这个方法是在afterNodeInsertion里调用的，而afterNodeInsertion
        * 是在put中调用的，如果LinkedHashMap长度大于size，linkedHashMap在添加的时候就会删除之前的节点
        * @param eldest
@@ -63,7 +63,9 @@ public class LruCache implements Cache {
       @Override
       protected boolean removeEldestEntry(Map.Entry<Object, Object> eldest) {
         boolean tooBig = size() > size;
+        /**若是当前LinkedHashMap中的键值对大于缓存允许的最大长度，那么就将第一个键值对删除*/
         if (tooBig) {
+          /**将要删除的key赋值*/
           eldestKey = eldest.getKey();
         }
         return tooBig;
@@ -110,8 +112,9 @@ public class LruCache implements Cache {
     keyMap.put(key, key);
     //如果要删除的key不为空
     if (eldestKey != null) {
-      //真正的缓存中删除这个键值对
+      //真正缓存中删除这个key
       delegate.removeObject(eldestKey);
+      /**置空要删除的key*/
       eldestKey = null;
     }
   }

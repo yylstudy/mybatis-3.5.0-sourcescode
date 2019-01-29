@@ -47,7 +47,7 @@ public class XMLLanguageDriver implements LanguageDriver {
   /**
    * 创建sqlSource
    * @param configuration configuration
-   * @param script 动态节点
+   * @param script insert、update、select、delete动态节点
    * @param parameterType  insert、update等语句参数类型
    * @return
    */

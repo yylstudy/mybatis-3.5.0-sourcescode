@@ -34,15 +34,15 @@ import org.apache.ibatis.session.Configuration;
  * @author Clinton Begin
  */
 public class BoundSql {
-  //sql语句
+  /**sql语句*/
   private final String sql;
-  //parameterMapping，将刚才StaticSqlSource解析完成的parameterMapping赋值给它
+  /**解析完成的parameterMapping*/
   private final List<ParameterMapping> parameterMappings;
-  //参数名和参数值的映射关系，Map<String,Object>
+  /**参数名和参数值的映射关系，Map<String,Object>，如果只有一个参数，就是参数值本身*/
   private final Object parameterObject;
-  //默认是空的参数构造
+  /**默认是空的参数构造*/
   private final Map<String, Object> additionalParameters;
-  //ContextMap对象的MetaObject对象，方便设置参数值和获取值，是个双重Map结构
+  /**ContextMap对象的MetaObject对象，方便设置参数值和获取值，是个双重Map结构*/
   private final MetaObject metaParameters;
 
   public BoundSql(Configuration configuration, String sql, List<ParameterMapping> parameterMappings, Object parameterObject) {

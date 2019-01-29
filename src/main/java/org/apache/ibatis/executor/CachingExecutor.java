@@ -38,10 +38,10 @@ import org.apache.ibatis.transaction.Transaction;
  */
 
 /**
- * 执行器装饰类
+ * 缓存执行器装饰类
  */
 public class CachingExecutor implements Executor {
-
+  /**被装饰的执行器类，常用的有SimpleExecutor*/
   private final Executor delegate;
   private final TransactionalCacheManager tcm = new TransactionalCacheManager();
 
@@ -114,15 +114,13 @@ public class CachingExecutor implements Executor {
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)
       throws SQLException {
     Cache cache = ms.getCache();
+    /**mapper的二级缓存不为空*/
     if (cache != null) {
       flushCacheIfRequired(ms);
       if (ms.isUseCache() && resultHandler == null) {
         ensureNoOutParams(ms, boundSql);
         @SuppressWarnings("unchecked")
-        /**
-         * //先获取二级缓存
-         * 从缓存中获取
-          */
+        /**先从二级缓存中获取*/
         List<E> list = (List<E>) tcm.getObject(cache, key);
         if (list == null) {
           list = delegate.<E> query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);

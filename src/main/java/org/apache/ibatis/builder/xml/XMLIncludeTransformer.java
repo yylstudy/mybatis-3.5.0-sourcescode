@@ -33,8 +33,9 @@ import org.w3c.dom.NodeList;
  * @author Frank D. Martinez [mnesarco]
  */
 public class XMLIncludeTransformer {
-
+  /**全局配置类*/
   private final Configuration configuration;
+  /**Mapper构建器助手*/
   private final MapperBuilderAssistant builderAssistant;
 
   public XMLIncludeTransformer(Configuration configuration, MapperBuilderAssistant builderAssistant) {
@@ -57,11 +58,6 @@ public class XMLIncludeTransformer {
   }
 
   /**
-   * Recursively apply includes through all SQL fragments.
-   * @param source Include node in DOM tree
-   * @param variablesContext Current context for static variables with values
-   */
-  /**
    * 将<include>标签替换成对应的sql语句
    * 这个过程差不多分为3步
    * 1）将include标签替换成对应的<sql>标签
@@ -81,7 +77,7 @@ public class XMLIncludeTransformer {
        * 不为空则解析成properties并添加configuration的变量键值对，然后返回
        */
       Properties toIncludeContext = getVariablesContext(source, variablesContext);
-      //递归填充toInclude的值
+      /**递归填充toInclude的值 此时toInclude标签为<sql></sql>标签*/
       applyIncludes(toInclude, toIncludeContext, true);
       if (toInclude.getOwnerDocument() != source.getOwnerDocument()) {
         toInclude = source.getOwnerDocument().importNode(toInclude, true);
@@ -100,10 +96,9 @@ public class XMLIncludeTransformer {
       }
       //删除之前插入的<sql>节点
       toInclude.getParentNode().removeChild(toInclude);
-      /**
-       * 这里第二次进来应该是<sql>节点，所有会走里面逻辑
-       */
-    } else if (source.getNodeType() == Node.ELEMENT_NODE) {
+    }
+    /**当前标签为节点递归第二次执行是<sql></sql>*/
+    else if (source.getNodeType() == Node.ELEMENT_NODE) {
       //若<include>下有propertis标签，则设置sql的值
       if (included && !variablesContext.isEmpty()) {
         // replace variables in attribute values
@@ -117,8 +112,10 @@ public class XMLIncludeTransformer {
       for (int i = 0; i < children.getLength(); i++) {
         applyIncludes(children.item(i), variablesContext, included);
       }
-      //第三次进来应该是sql的文本节点
-    } else if (included && source.getNodeType() == Node.TEXT_NODE
+
+    }
+    /**第三次进来应该是sql的文本节点*/
+    else if (included && source.getNodeType() == Node.TEXT_NODE
         && !variablesContext.isEmpty()) {
       // replace variables in text node
       source.setNodeValue(PropertyParser.parse(source.getNodeValue(), variablesContext));

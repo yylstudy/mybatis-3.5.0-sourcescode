@@ -27,7 +27,7 @@ import org.apache.ibatis.type.SimpleTypeRegistry;
  * 动态的文本sql，其中包含${}
  */
 public class TextSqlNode implements SqlNode {
-  //动态的文本sql
+  /**文本sql*/
   private final String text;
   private final Pattern injectionFilter;
 
@@ -43,7 +43,11 @@ public class TextSqlNode implements SqlNode {
     TextSqlNode tx = new TextSqlNode("hef${name.text}eefh");
     tx.isDynamic();
   }
-  
+
+  /**
+   * TextSqlNode是否是动态的
+   * @return
+   */
   public boolean isDynamic() {
     DynamicCheckerTokenParser checker = new DynamicCheckerTokenParser();
     GenericTokenParser parser = createParser(checker);

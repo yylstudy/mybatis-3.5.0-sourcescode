@@ -28,14 +28,16 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 public class ParameterMapping {
 
   private Configuration configuration;
-  //属性名
+  /**属性名*/
   private String property;
+  /**in，这个应该表示这个参数是输入的*/
   private ParameterMode mode;
-  //属性的java类型
+  /**属性的java类型*/
   private Class<?> javaType = Object.class;
+  /**参数的jdbcType*/
   private JdbcType jdbcType;
   private Integer numericScale;
-  //该属性的typeHandler实例
+  /**该属性的typeHandler实例*/
   private TypeHandler<?> typeHandler;
   //resultMap的值，不多用
   private String resultMapId;
@@ -101,8 +103,13 @@ public class ParameterMapping {
       parameterMapping.expression = expression;
       return this;
     }
-    //构建PartameterMapping
+
+    /**
+     * 构建PartameterMapping
+     * @return
+     */
     public ParameterMapping build() {
+      /**解析TypeHandler，因为如果未定义TypeHandler，那么就需要根据JavaType和JdbcType到Configuration中查找匹配的TypeHandler*/
       resolveTypeHandler();
       validate();
       return parameterMapping;

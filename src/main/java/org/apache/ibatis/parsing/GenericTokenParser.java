@@ -21,9 +21,9 @@ import org.apache.ibatis.scripting.xmltags.TextSqlNode;
  * @author Clinton Begin
  */
 public class GenericTokenParser {
-  //开始的表达式 例如#{
+  /**开始的表达式 例如#{*/
   private final String openToken;
-  //结束的表达式 例如}
+  /**结束的表达式 例如}*/
   private final String closeToken;
   private final TokenHandler handler;
 
@@ -54,8 +54,9 @@ public class GenericTokenParser {
     char[] src = text.toCharArray();
     int offset = 0;
     final StringBuilder builder = new StringBuilder();
-    //${}中表达式的字符串
+    /**${}、#{}中表达式的字符串*/
     StringBuilder expression = null;
+    /**start表示上个#{或者${的下标*/
     while (start > -1) {
       if (start > 0 && src[start - 1] == '\\') {
         // this open token is escaped. remove the backslash and continue.
@@ -68,20 +69,20 @@ public class GenericTokenParser {
         } else {
           expression.setLength(0);
         }
-        //加上${左边的字符串
+        //加上${、#{左边的字符串
         builder.append(src, offset, start - offset);
-        //${的下标
+        //${、#{的下标
         offset = start + openToken.length();
         //}的下标
         int end = text.indexOf(closeToken, offset);
         while (end > -1) {
           if (end > offset && src[end - 1] == '\\') {
             // this close token is escaped. remove the backslash and continue.
-            //获取${}中的表达式
             expression.append(src, offset, end - offset - 1).append(closeToken);
             offset = end + closeToken.length();
             end = text.indexOf(closeToken, offset);
           } else {
+            /**获取${}、#{}中的表达式*/
             expression.append(src, offset, end - offset);
             offset = end + closeToken.length();
             break;

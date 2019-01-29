@@ -50,15 +50,15 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 public abstract class BaseExecutor implements Executor {
 
   private static final Log log = LogFactory.getLog(BaseExecutor.class);
-
+  /**事务对象JdbcTransaction*/
   protected Transaction transaction;
-  //当前执行器实例
+  /**CacheExecutor*/
   protected Executor wrapper;
 
   protected ConcurrentLinkedQueue<DeferredLoad> deferredLoads;
-  //当前SqlSession 的缓存类，这个应该就是mybatis的一级缓存类
+  /**当前SqlSession 的缓存类，这个应该就是mybatis的一级缓存类*/
   protected PerpetualCache localCache;
-  //当前sqlSession的输出参数缓存
+  /**当前sqlSession的输出参数缓存*/
   protected PerpetualCache localOutputParameterCache;
   protected Configuration configuration;
 
@@ -163,7 +163,7 @@ public abstract class BaseExecutor implements Executor {
     List<E> list;
     try {
       queryStack++;
-      //尝试从一级缓存中获取数据
+      /**尝试从一级缓存中获取数据*/
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
       if (list != null) {
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
@@ -347,6 +347,18 @@ public abstract class BaseExecutor implements Executor {
     }
   }
 
+  /**
+   * 从数据库中查询
+   * @param ms
+   * @param parameter
+   * @param rowBounds
+   * @param resultHandler
+   * @param key
+   * @param boundSql
+   * @param <E>
+   * @return
+   * @throws SQLException
+   */
   private <E> List<E> queryFromDatabase(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
     List<E> list;
     //表示这个key正在执行查询操作，后面如果还有查询这个key，应该是等待

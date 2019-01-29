@@ -43,11 +43,13 @@ import org.xml.sax.SAXParseException;
  * @author Clinton Begin
  */
 public class XPathParser {
-
-  private final Document document;//资源解析文件的Document实例
+  /**资源解析文件的Document实例*/
+  private final Document document;
   private boolean validation;//true
-  private EntityResolver entityResolver; //dtd解析文件的位置
-  private Properties variables; //存放configuration解析完成的<properties/>标签
+  /**XMLMapperEntityResolver mybatis的xml文件的解析类*/
+  private EntityResolver entityResolver;
+  /**存放configuration解析完成的<properties/>标签*/
+  private Properties variables;
   private XPath xpath;
 
   public XPathParser(String xml) {

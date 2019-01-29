@@ -30,9 +30,9 @@ import org.apache.ibatis.session.Configuration;
  * 创建一个静态的sqlSource
  */
 public class StaticSqlSource implements SqlSource {
-  //sql语句
+  /**sql语句*/
   private final String sql;
-  //参数列表，将刚才解析的parameterMapping赋值给这个
+  /**解析完成的ParameterMapping*/
   private final List<ParameterMapping> parameterMappings;
   private final Configuration configuration;
 
@@ -46,6 +46,11 @@ public class StaticSqlSource implements SqlSource {
     this.configuration = configuration;
   }
 
+  /**
+   * 获取静态语句的BoundSql
+   * @param parameterObject
+   * @return
+   */
   @Override
   public BoundSql getBoundSql(Object parameterObject) {
     return new BoundSql(configuration, sql, parameterMappings, parameterObject);

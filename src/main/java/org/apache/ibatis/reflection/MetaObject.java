@@ -32,15 +32,15 @@ import org.apache.ibatis.reflection.wrapper.ObjectWrapperFactory;
  * @author Clinton Begin
  */
 public class MetaObject {
-
-  private final Object originalObject; //dataSource
-  //默认是DefaultObjectWrapper
+  /**真正执行的对象*/
+  private final Object originalObject;
+  /**对象转换器 BeanWrapper*/
   private final ObjectWrapper objectWrapper;
-  //默认是DefaultObjectFactory
+  /**对象工厂，默认是DefaultObjectFactory*/
   private final ObjectFactory objectFactory;
-  //默认是DefaultObjectWrapperFactory
+  /**对象转换工厂 默认是DefaultObjectWrapperFactory*/
   private final ObjectWrapperFactory objectWrapperFactory;
-  //默认是DefaultReflectorFactory
+  /**反射工厂，默认是DefaultReflectorFactory*/
   private final ReflectorFactory reflectorFactory;
 
   private MetaObject(Object object, ObjectFactory objectFactory, ObjectWrapperFactory objectWrapperFactory, ReflectorFactory reflectorFactory) {
@@ -136,9 +136,15 @@ public class MetaObject {
     }
   }
 
+  /**
+   * 设置属性值
+   * @param name 属性或者方法的key
+   * @param value 属性值
+   */
   public void setValue(String name, Object value) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {
+      /**获取xx.yy中xx的MetaObject对象*/
       MetaObject metaValue = metaObjectForProperty(prop.getIndexedName());
       if (metaValue == SystemMetaObject.NULL_META_OBJECT) {
         if (value == null && prop.getChildren() != null) {
@@ -150,6 +156,7 @@ public class MetaObject {
       }
       metaValue.setValue(prop.getChildren(), value);
     } else {
+      /**不存在.，也就是这是个单一属性*/
       objectWrapper.set(prop, value);
     }
   }

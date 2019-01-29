@@ -31,35 +31,37 @@ import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.reflection.ParamNameUtil;
 import org.apache.ibatis.session.Configuration;
 
+
+
 /**
  * @author Clinton Begin
  */
 public class ResultMap {
-  //全局配置类
+  /**全局配置类*/
   private Configuration configuration;
-  //resultMap的唯一标识 结构是：dao类名+"."+resultMap的id
+  /**resultMap的唯一标识 结构是：dao类名+"."+resultMap的id*/
   private String id;
-  //resultMap的java类型
+  /**resultMap的java类型*/
   private Class<?> type;
-  //resultMap下子元素的对象集合
+  /**resultMap下子元素的对象集合*/
   private List<ResultMapping> resultMappings;
   /**
    * <resultMap>下id标签的集合 或者constructor下<idArg>标签，
    * 若没有id标签，则存放所有的resultMapping
    */
   private List<ResultMapping> idResultMappings;
-  //<resultMap>下constructor标签的集合
+  /**<resultMap>下constructor标签的集合*/
   private List<ResultMapping> constructorResultMappings;
-  //<resultMap>下property、id标签的集合
+  /**<resultMap>下property、id标签的集合*/
   private List<ResultMapping> propertyResultMappings;
-  //resultMap的数据库列名集合，大写的
+  /**resultMap的数据库列名集合，大写的*/
   private Set<String> mappedColumns;
-  //resultMap的属性字段名集合
+  /**resultMap的属性字段名集合*/
   private Set<String> mappedProperties;
   private Discriminator discriminator;
-  //association、collection的是否包含resultMap或者不包含select
+  /**association、collection的是否包含resultMap或者不包含select*/
   private boolean hasNestedResultMaps;
-  //association、collection是否包含select 元素
+  /**association、collection是否包含select 元素*/
   private boolean hasNestedQueries;
   private Boolean autoMapping;
 
@@ -149,9 +151,9 @@ public class ResultMap {
         final List<String> actualArgNames = argNamesOfMatchingConstructor(constructorArgNames);
         if (actualArgNames == null) {
           throw new BuilderException("Error in result map '" + resultMap.id
-              + "'. Failed to find a constructor in '"
-              + resultMap.getType().getName() + "' by arg names " + constructorArgNames
-              + ". There might be more info in debug log.");
+                  + "'. Failed to find a constructor in '"
+                  + resultMap.getType().getName() + "' by arg names " + constructorArgNames
+                  + ". There might be more info in debug log.");
         }
         //对resultMap的constructorResultMappings进行根据参数位置排序
         Collections.sort(resultMap.constructorResultMappings, (o1, o2) -> {
@@ -186,7 +188,7 @@ public class ResultMap {
           List<String> paramNames = getArgNames(constructor);
           //之前解析resultMap的构造参数名称集合都包含反射Java类的参数名称集合
           if (constructorArgNames.containsAll(paramNames)
-              && argTypesMatch(constructorArgNames, paramTypes, paramNames)) {
+                  && argTypesMatch(constructorArgNames, paramTypes, paramNames)) {
             return paramNames;
           }
         }
@@ -195,17 +197,17 @@ public class ResultMap {
     }
 
     private boolean argTypesMatch(final List<String> constructorArgNames,
-        Class<?>[] paramTypes, List<String> paramNames) {
+                                  Class<?>[] paramTypes, List<String> paramNames) {
       for (int i = 0; i < constructorArgNames.size(); i++) {
         Class<?> actualType = paramTypes[paramNames.indexOf(constructorArgNames.get(i))];
         Class<?> specifiedType = resultMap.constructorResultMappings.get(i).getJavaType();
         if (!actualType.equals(specifiedType)) {
           if (log.isDebugEnabled()) {
             log.debug("While building result map '" + resultMap.id
-                + "', found a constructor with arg names " + constructorArgNames
-                + ", but the type of '" + constructorArgNames.get(i)
-                + "' did not match. Specified: [" + specifiedType.getName() + "] Declared: ["
-                + actualType.getName() + "]");
+                    + "', found a constructor with arg names " + constructorArgNames
+                    + ", but the type of '" + constructorArgNames.get(i)
+                    + "' did not match. Specified: [" + specifiedType.getName() + "] Declared: ["
+                    + actualType.getName() + "]");
           }
           return false;
         }
@@ -293,7 +295,7 @@ public class ResultMap {
   public void forceNestedResultMaps() {
     hasNestedResultMaps = true;
   }
-  
+
   public Boolean getAutoMapping() {
     return autoMapping;
   }

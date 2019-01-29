@@ -21,6 +21,7 @@ import org.apache.ibatis.reflection.wrapper.DefaultObjectWrapperFactory;
 import org.apache.ibatis.reflection.wrapper.ObjectWrapperFactory;
 
 /**
+ * 获取系统元数据对象类
  * @author Clinton Begin
  */
 public final class SystemMetaObject {

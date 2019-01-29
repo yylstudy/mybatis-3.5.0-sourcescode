@@ -52,12 +52,13 @@ import org.apache.ibatis.type.TypeHandler;
  * @author Kazuki Shimizu
  */
 public class XMLConfigBuilder extends BaseBuilder {
-
+  /**是否已经解析*/
   private boolean parsed;
-  //资源文件的解析器
+  /**mybatis 资源文件解析器，这个里面包含xml解析出来的Document对象*/
   private final XPathParser parser;
-  //环境，mybatis的环境字符串
+  /**环境，mybatis的环境字符串，environment标签中default属性的值*/
   private String environment;
+  /**默认的反射工厂类*/
   private final ReflectorFactory localReflectorFactory = new DefaultReflectorFactory();
 
   public XMLConfigBuilder(Reader reader) {
@@ -99,6 +100,10 @@ public class XMLConfigBuilder extends BaseBuilder {
     this.parser = parser;
   }
 
+  /**
+   * 解析xml中的信息到刚才创建的Configuration类中
+   * @return
+   */
   public Configuration parse() {
     if (parsed) {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
@@ -114,10 +119,9 @@ public class XMLConfigBuilder extends BaseBuilder {
    */
   private void parseConfiguration(XNode root) {
     try {
-      //issue #117 read properties first
-      //解析properties元素
+      /**解析properties元素*/
       propertiesElement(root.evalNode("properties"));
-      //校验Configuration中是否包含settings设置的key
+      /**校验settings标签下的setting标签的name值是否符合规范*/
       Properties settings = settingsAsProperties(root.evalNode("settings"));
       //settings下property的name为vfsImpl标签
       loadCustomVfs(settings);
@@ -125,7 +129,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       typeAliasesElement(root.evalNode("typeAliases"));
       //解析plugins属性
       pluginElement(root.evalNode("plugins"));
-      //解析ObejctFactory属性
+      //解析ObejctFactory属性，这个属性主要是用于创建查询时返回类型的bean
       objectFactoryElement(root.evalNode("objectFactory"));
       //解析ObjectWrapperFactory属性
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
@@ -159,13 +163,9 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
     Properties props = context.getChildrenAsProperties();
     // Check that all settings are known to the configuration class
-    /**
-     * 获取configuration的反射器类
-     */
+    /**获取Configuration的源class对象*/
     MetaClass metaConfig = MetaClass.forClass(Configuration.class, localReflectorFactory);
-    /**
-     * 校验Configuration类是否包含<settings></settings>配置的key，若不包含，则抛出异常
-     */
+    /** 校验Configuration类是否包含<settings></settings>配置的key，若不包含，则抛出异常*/
     for (Object key : props.keySet()) {
       if (!metaConfig.hasSetter(String.valueOf(key))) {
         throw new BuilderException("The setting " + key + " is not known.  Make sure you spelled it correctly (case sensitive).");
@@ -198,6 +198,7 @@ public class XMLConfigBuilder extends BaseBuilder {
         //package子标签
         if ("package".equals(child.getName())) {
           String typeAliasPackage = child.getStringAttribute("name");
+          /**根据包名进行别名注册*/
           configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);
         } else {
           //typeAlias标签
@@ -243,11 +244,11 @@ public class XMLConfigBuilder extends BaseBuilder {
     if (context != null) {
       //获取ObejcyFactory的类名
       String type = context.getStringAttribute("type");
-      //获取所有子标签属性
+      /**获取所有子标签属性*/
       Properties properties = context.getChildrenAsProperties();
-      //自定义的ObjectFactorty都要实现ObjectFactory接口，先获取Class对象，再反射出一个实例
+      /**反射出自定义ObjectFactory的实例*/
       ObjectFactory factory = (ObjectFactory) resolveClass(type).newInstance();
-      //将xml中配置的属性填充到ObjectFactory实例
+      /**将xml中的属性赋值到自定义的ObjectFactory中*/
       factory.setProperties(properties);
       configuration.setObjectFactory(factory);
     }
@@ -276,7 +277,7 @@ public class XMLConfigBuilder extends BaseBuilder {
    */
   private void propertiesElement(XNode context) throws Exception {
     if (context != null) {
-      //获取prpperty元素
+      //获取所有的property标签
       Properties defaults = context.getChildrenAsProperties();
       String resource = context.getStringAttribute("resource");
       String url = context.getStringAttribute("url");
@@ -351,7 +352,7 @@ public class XMLConfigBuilder extends BaseBuilder {
           TransactionFactory txFactory = transactionManagerElement(child.evalNode("transactionManager"));
           //获取DataSourceFactory
           DataSourceFactory dsFactory = dataSourceElement(child.evalNode("dataSource"));
-          //获取Datasource
+          //返回数据源工厂中的数据源
           DataSource dataSource = dsFactory.getDataSource();
           //建造者模式构建 Environment.Builder，Builder包含上面解析出来的三个属性
           Environment.Builder environmentBuilder = new Environment.Builder(id)
@@ -422,7 +423,7 @@ public class XMLConfigBuilder extends BaseBuilder {
        * 对dataSource赋值
        */
       DataSourceFactory factory = (DataSourceFactory) resolveClass(type).newInstance();
-      //填充datasource的属性，以获取连接
+      /**填充DataSourceFactory中的DataSource属性*/
       factory.setProperties(props);
       return factory;
     }
@@ -459,6 +460,7 @@ public class XMLConfigBuilder extends BaseBuilder {
               typeHandlerRegistry.register(javaTypeClass, jdbcType, typeHandlerClass);
             }
           } else {
+            /**注解形式的TypeHandler注册*/
             typeHandlerRegistry.register(typeHandlerClass);
           }
         }

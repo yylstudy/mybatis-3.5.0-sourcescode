@@ -30,7 +30,7 @@ import org.apache.ibatis.session.ResultHandler;
  * 默认的resultHandler实现
  */
 public class DefaultResultHandler implements ResultHandler<Object> {
-  //这个对象是存放结果集的实例，由反射生成
+  /**这个对象是存放结果集的实例，由反射生成*/
   private final List<Object> list;
 
   public DefaultResultHandler() {

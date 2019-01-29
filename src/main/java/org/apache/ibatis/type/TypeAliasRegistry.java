@@ -36,7 +36,7 @@ import org.apache.ibatis.io.Resources;
  * @author Clinton Begin
  */
 public class TypeAliasRegistry {
-  //存放别名->Class对象的映射集合
+  /**别名和class的映射集合*/
   private final Map<String, Class<?>> TYPE_ALIASES = new HashMap<>();
 
   public TypeAliasRegistry() {
@@ -152,7 +152,7 @@ public class TypeAliasRegistry {
   }
 
   public void registerAlias(Class<?> type) {
-    //类的简单名字
+    /**获取类的简单名字*/
     String alias = type.getSimpleName();
     Alias aliasAnnotation = type.getAnnotation(Alias.class);
     //判断是否有Alias注解，若有，则别名取注解中的值

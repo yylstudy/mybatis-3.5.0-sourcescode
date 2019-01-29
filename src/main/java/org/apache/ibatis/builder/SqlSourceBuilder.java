@@ -59,14 +59,11 @@ public class SqlSourceBuilder extends BaseBuilder {
   }
 
   private static class ParameterMappingTokenHandler extends BaseBuilder implements TokenHandler {
-    /**
-     * parameterMapping，不知道哪里设置值？？？？，找到了，是在ParameterMappingTokenHandler的handleToken方法中
-     * 进行解析的
-     */
+    /**是在ParameterMappingTokenHandler的handleToken方法中进行解析的*/
     private List<ParameterMapping> parameterMappings = new ArrayList<>();
-    //参数类型（这不是所有参数的类型，而是参数下标和其值得Map类型）
+    /**参数类型（xml中定义的parameterType的类型，缺省为Object）*/
     private Class<?> parameterType;
-    //构建一个ContextMap的MetaObject对象，这个ContextMap 其中有两个key 一个是_parameter 值是参数对象
+    /**参数类的MetaObjecy*/
     private MetaObject metaParameters;
 
     public ParameterMappingTokenHandler(Configuration configuration, Class<?> parameterType, Map<String, Object> additionalParameters) {
@@ -93,6 +90,7 @@ public class SqlSourceBuilder extends BaseBuilder {
      * @return
      */
     private ParameterMapping buildParameterMapping(String content) {
+      /**将表达式解析成键值对*/
       Map<String, String> propertiesMap = parseParameterMapping(content);
       //获取属性key，上面的例子，就是name
       String property = propertiesMap.get("property");
@@ -108,7 +106,7 @@ public class SqlSourceBuilder extends BaseBuilder {
       } else if (property == null || Map.class.isAssignableFrom(parameterType)) {
         propertyType = Object.class;
       } else {
-        //若上面都差找不到proeprty属性，那么构建一个参数类型的反射器，从其中查找
+        /**若上面都查找不到proeprty属性，那么构建一个参数类型的反射器，从其中查找*/
         MetaClass metaClass = MetaClass.forClass(parameterType, configuration.getReflectorFactory());
         if (metaClass.hasGetter(property)) {
           propertyType = metaClass.getGetterType(property);

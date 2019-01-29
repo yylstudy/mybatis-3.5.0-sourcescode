@@ -18,14 +18,19 @@ package org.apache.ibatis.reflection.property;
 import java.util.Iterator;
 
 /**
+ * 属性记录器，这个通常是用来处理  xxx.yy使用的
  * @author Clinton Begin
  */
 public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
+  /**当前属性名xxx*/
   private String name;
+  /**当前索引属性名（这个和上面的值一样）*/
   private final String indexedName;
+  /**这个是检验[符号的之前的字符串*/
   private String index;
+  /**当前属性的子属性名 yy*/
   private final String children;
-
+  /**创建一个属性记录器，这个通常是来处理xxx.yy的*/
   public PropertyTokenizer(String fullname) {
     int delim = fullname.indexOf('.');
     if (delim > -1) {

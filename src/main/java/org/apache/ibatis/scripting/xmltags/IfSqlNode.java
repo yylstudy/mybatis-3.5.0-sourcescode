@@ -23,11 +23,11 @@ package org.apache.ibatis.scripting.xmltags;
  * if动态标签类
  */
 public class IfSqlNode implements SqlNode {
-  //表达式解析器
+  /**表达式解析器*/
   private final ExpressionEvaluator evaluator;
-  //test属性的值
+  /**test属性的值*/
   private final String test;
-  //MixedSqlNode，里面存有一个集合，包含各个子标签（包括文本）
+  /**MixedSqlNode，里面存有一个集合，包含各个子标签（包括文本）*/
   private final SqlNode contents;
 
   public IfSqlNode(SqlNode contents, String test) {

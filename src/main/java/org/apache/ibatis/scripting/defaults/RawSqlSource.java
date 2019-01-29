@@ -33,7 +33,7 @@ import org.apache.ibatis.session.Configuration;
  * @author Eduardo Macarron
  */
 public class RawSqlSource implements SqlSource {
-  //staticSqlSource
+  /**StaticSqlSource*/
   private final SqlSource sqlSource;
 
   /**
@@ -59,7 +59,7 @@ public class RawSqlSource implements SqlSource {
    * @return
    */
   private static String getSql(Configuration configuration, SqlNode rootSqlNode) {
-    //构建一个新的ContextMap，value都为空
+    /**构建一个新的ContextMap*/
     DynamicContext context = new DynamicContext(configuration, null);
     //向上面的ContextMap中的StringBuilder添加sql
     rootSqlNode.apply(context);

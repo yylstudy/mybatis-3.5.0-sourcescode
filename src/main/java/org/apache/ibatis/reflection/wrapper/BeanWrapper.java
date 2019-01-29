@@ -30,9 +30,9 @@ import org.apache.ibatis.reflection.property.PropertyTokenizer;
  * @author Clinton Begin
  */
 public class BeanWrapper extends BaseWrapper {
-  //真正对象，如datasource
+  /**真正的对象*/
   private final Object object;
-  //获取datasource的MetaClass,这个中包含datasource的反射器
+  /**对象的元数据Class   MetaClass*/
   private final MetaClass metaClass;
 
   public BeanWrapper(MetaObject metaObject, Object object) {
@@ -51,6 +51,11 @@ public class BeanWrapper extends BaseWrapper {
     }
   }
 
+  /**
+   * 设置属性或者方法的值
+   * @param prop
+   * @param value
+   */
   @Override
   public void set(PropertyTokenizer prop, Object value) {
     if (prop.getIndex() != null) {
@@ -105,7 +110,12 @@ public class BeanWrapper extends BaseWrapper {
       return metaClass.getGetterType(name);
     }
   }
-  //查看反射器中是否包含属性的setter方法
+
+  /**
+   * 反射器是否包含属性或者getset方法
+   * @param name
+   * @return
+   */
   @Override
   public boolean hasSetter(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
@@ -144,6 +154,13 @@ public class BeanWrapper extends BaseWrapper {
     }
   }
 
+  /**
+   * 初始化
+   * @param name
+   * @param prop
+   * @param objectFactory
+   * @return
+   */
   @Override
   public MetaObject instantiatePropertyValue(String name, PropertyTokenizer prop, ObjectFactory objectFactory) {
     MetaObject metaValue;
@@ -181,11 +198,11 @@ public class BeanWrapper extends BaseWrapper {
    */
   private void setBeanProperty(PropertyTokenizer prop, Object object, Object value) {
     try {
-      //获取属性对应的set方法对象，Invoker是method的装饰对象
+      /**获取对应属性或者set方法的Invoke*/
       Invoker method = metaClass.getSetInvoker(prop.getName());
       Object[] params = {value};
       try {
-        //设置值
+        /**执行方法或者属性赋值*/
         method.invoke(object, params);
       } catch (Throwable t) {
         throw ExceptionUtil.unwrapThrowable(t);

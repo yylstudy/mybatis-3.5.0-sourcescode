@@ -38,21 +38,21 @@ import org.apache.ibatis.reflection.SystemMetaObject;
  * @author Clinton Begin
  */
 public class CacheBuilder {
-  //当前mapper的nameSpace，也就是dao的地址
+  /**当前mapper的nameSpace，也就是dao的地址*/
   private final String id;
-  //缓存的实现类
+  /**缓存的实现类 默认PerpetualCache*/
   private Class<? extends Cache> implementation;
-  //缓存的回收策略，其实就是缓存实现类的装饰类，可以看到这里是个集合，也就是说装饰类可以是多个
+  /**缓存的装饰类集合，LruCache*/
   private final List<Class<? extends Cache>> decorators;
-  //缓存存储的大小
+  /**缓存存储的大小*/
   private Integer size;
-  //缓存刷新时间
+  /**缓存刷新时间*/
   private Long clearInterval;
-  //是否能读写
+  /**是否能读写*/
   private boolean readWrite;
-  //cache下子标签的键值对
+  /**cache下子标签的键值对*/
   private Properties properties;
-  //是否阻塞
+  /**是否阻塞*/
   private boolean blocking;
 
   public CacheBuilder(String id) {
@@ -115,6 +115,7 @@ public class CacheBuilder {
         cache = newCacheDecoratorInstance(decorator, cache);
         setCacheProperties(cache);
       }
+      /**设置通用的装饰器*/
       cache = setStandardDecorators(cache);
       //若自定义的缓存类不是LoggingCache的子类，那么创建一个LoggingCache装饰类，用于统计缓存的命中率
     } else if (!LoggingCache.class.isAssignableFrom(cache.getClass())) {
@@ -231,7 +232,7 @@ public class CacheBuilder {
       /**
        * 使用这个构造函数，创建一个实例这里的id是dao的类名，所以在自定义缓存中,必须要
        * 定义一个String的构造函数，例如：public RedisCache(final String id){}
-       * id就是在这里赋值进去的
+       * id就是在这里赋值进去的，id就是namespace的值
        */
       return cacheConstructor.newInstance(id);
     } catch (Exception e) {

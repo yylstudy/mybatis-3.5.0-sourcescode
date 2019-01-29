@@ -29,17 +29,17 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
  * @author Clinton Begin
  */
 public class ResultMapping {
-  //配置类
+  /**配置类*/
   private Configuration configuration;
-  //属性名
+  /**属性名*/
   private String property;
-  //列名
+  /**列名*/
   private String column;
-  //java类型
+  /**java类型*/
   private Class<?> javaType;
-  //JDBC类型
+  /**JDBC类型*/
   private JdbcType jdbcType;
-  //typeHandler实例
+  /**typeHandler实例*/
   private TypeHandler<?> typeHandler;
   /**
    * association、collection的resultMap 元素的值  这个resultMap就是<association>、<collection>标签中
@@ -50,7 +50,7 @@ public class ResultMapping {
   //association、collection的select 元素的值，表示要执行的sql语句
   private String nestedQueryId;
   private Set<String> notNullColumns;
-  //列名前缀
+  /**列名前缀*/
   private String columnPrefix;
   /**
    * 表示这个列类型  若resultMapping节点名是<constructor>，那么集合包含CONSTRUCTOR
@@ -58,10 +58,10 @@ public class ResultMapping {
    */
   private List<ResultFlag> flags;
   private List<ResultMapping> composites;
-  //association、collection的resultSet 元素的值
+  /**association、collection的resultSet 元素的值*/
   private String resultSet;
   private String foreignColumn;
-  //是否懒加载，默认是继承configuration的配置
+  /**是否懒加载，默认是继承configuration的配置*/
   private boolean lazy;
 
   ResultMapping() {

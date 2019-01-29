@@ -22,9 +22,9 @@ import java.util.Map;
  * @author Frank D. Martinez [mnesarco]
  */
 public class LanguageDriverRegistry {
-  //存放语言Class类->其实例 映射集合
+  /**语言驱动类和其实例的集合*/
   private final Map<Class<? extends LanguageDriver>, LanguageDriver> LANGUAGE_DRIVER_MAP = new HashMap<>();
-  //存放 默认语言驱动类的Class对象
+  /**默认的语言驱动类  XMLLanguageDriver*/
   private Class<? extends LanguageDriver> defaultDriverClass;
 
   public void register(Class<? extends LanguageDriver> cls) {

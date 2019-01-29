@@ -51,13 +51,13 @@ import org.apache.ibatis.type.TypeHandler;
  * @author Clinton Begin
  */
 public class XMLMapperBuilder extends BaseBuilder {
-  //mapper资源文件的解析器
+  /**mapper资源文件的解析器*/
   private final XPathParser parser;
-  //mapperBuilderAssistant，解析具体的mapper中需要使用到
+  /**MapperBuilderAssistant*/
   private final MapperBuilderAssistant builderAssistant;
-  //存放所有的<sql>标签的键值对，daoName+"."+id   --->   sqlNode
+  /**存放所有的<sql>标签的键值对，daoName+"."+id   --->   sqlNode*/
   private final Map<String, XNode> sqlFragments;
-  //mapper资源文件的字符串路径
+  /**mapper资源文件的字符串路径*/
   private final String resource;
 
   @Deprecated
@@ -109,19 +109,19 @@ public class XMLMapperBuilder extends BaseBuilder {
    * 解析mapper资源文件
    */
   public void parse() {
-    //判断是否已经解析过了
+    /**判断是否已经解析过了*/
     if (!configuration.isResourceLoaded(resource)) {
-      //解析mapper元素
+      /**解析mapper元素*/
       configurationElement(parser.evalNode("/mapper"));
       configuration.addLoadedResource(resource);
-      //根据namespace构建Mapper
+      /**根据namespace构建Mapper*/
       bindMapperForNamespace();
     }
-    //解析之前因异常解析未完成的ResultMap
+    /**解析之前因异常解析未完成的ResultMap*/
     parsePendingResultMaps();
-    //解析之前因异常解析未完成的cacheRef
+    /**解析之前因异常解析未完成的cacheRef*/
     parsePendingCacheRefs();
-    //解析之前因异常解析未完成的Statements
+    /**解析之前因异常解析未完成的Statements*/
     parsePendingStatements();
   }
 
@@ -179,10 +179,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       //构建XMLStatementBuilder
       final XMLStatementBuilder statementParser = new XMLStatementBuilder(configuration, builderAssistant, context, requiredDatabaseId);
       try {
-        /**
-         * 解析语句成MappedStatement,MappedStatement就是语句在mybatis中的表现形式
-         * 并加入到缓存中
-         */
+        /**解析语句成MappedStatement,MappedStatement就是语句在mybatis中的表现形式，并加入到缓存中*/
         statementParser.parseStatementNode();
       } catch (IncompleteElementException e) {
         configuration.addIncompleteStatement(statementParser);
@@ -358,7 +355,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     //获取type对应的Class
     Class<?> typeClass = resolveClass(type);
     Discriminator discriminator = null;
-    //这个其实是resultMapping下的子元素的对象集合
+    //这个其实是resultMapp下的子元素的对象集合
     List<ResultMapping> resultMappings = new ArrayList<>();
     resultMappings.addAll(additionalResultMappings);
     List<XNode> resultChildren = resultMapNode.getChildren();
@@ -378,7 +375,7 @@ public class XMLMapperBuilder extends BaseBuilder {
         resultMappings.add(buildResultMappingFromContext(resultChild, typeClass, flags));
       }
     }
-    //构建resultMapping解析器
+    /**构建resultMap解析器*/
     ResultMapResolver resultMapResolver = new ResultMapResolver(builderAssistant, id, typeClass, extend, discriminator, resultMappings, autoMapping);
     try {
       return resultMapResolver.resolve();
@@ -533,7 +530,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
     return null;
   }
-
+  /**根据nameSpace绑定Mapper*/
   private void bindMapperForNamespace() {
     String namespace = builderAssistant.getCurrentNamespace();
     if (namespace != null) {
@@ -544,11 +541,13 @@ public class XMLMapperBuilder extends BaseBuilder {
         //ignore, bound type is not required
       }
       if (boundType != null) {
+        /**该Mapper未注册到Configuration*/
         if (!configuration.hasMapper(boundType)) {
           // Spring may not know the real resource name so we set a flag
           // to prevent loading again this resource from the mapper interface
           // look at MapperAnnotationBuilder#loadXmlResource
           configuration.addLoadedResource("namespace:" + namespace);
+          /**向Configuration中注册这个dao*/
           configuration.addMapper(boundType);
         }
       }

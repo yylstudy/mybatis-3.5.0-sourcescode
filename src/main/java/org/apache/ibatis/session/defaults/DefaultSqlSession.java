@@ -49,9 +49,9 @@ import org.apache.ibatis.session.SqlSession;
 public class DefaultSqlSession implements SqlSession {
     //全局配置类
     private final Configuration configuration;
-    //执行器
+    /**执行器*/
     private final Executor executor;
-    //是佛最偶的那个提交
+    /**是否自动提交*/
     private final boolean autoCommit;
     private boolean dirty;
     private List<Cursor<?>> cursorList;

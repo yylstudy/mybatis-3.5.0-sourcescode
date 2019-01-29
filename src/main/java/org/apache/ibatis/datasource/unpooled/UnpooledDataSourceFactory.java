@@ -31,7 +31,7 @@ public class UnpooledDataSourceFactory implements DataSourceFactory {
 
   private static final String DRIVER_PROPERTY_PREFIX = "driver.";
   private static final int DRIVER_PROPERTY_PREFIX_LENGTH = DRIVER_PROPERTY_PREFIX.length();
-  //mybatis的datasource数据源
+  /**mybatis的datasource数据源*/
   protected DataSource dataSource;
 
   public UnpooledDataSourceFactory() {
@@ -45,19 +45,21 @@ public class UnpooledDataSourceFactory implements DataSourceFactory {
    */
   public void setProperties(Properties properties) {
     Properties driverProperties = new Properties();
-    //获取dataSource的MetaObject,其objectWrapper属性是BeanWrapper，BeanWrapper中
-    //包含MetaClass以及真正的对象，MetaClass包含反射器和反射器工厂
+    /**创建MetaObject，这个用于对一个对象实例get、set方法以及没有set、get方法的属性进行赋值*/
     MetaObject metaDataSource = SystemMetaObject.forObject(dataSource);
     for (Object key : properties.keySet()) {
       String propertyName = (String) key;
       if (propertyName.startsWith(DRIVER_PROPERTY_PREFIX)) {
         String value = properties.getProperty(propertyName);
         driverProperties.setProperty(propertyName.substring(DRIVER_PROPERTY_PREFIX_LENGTH), value);
-        //通过反射器校验datasource对象是否包含<datasource></datasource>标签下配置的属性
-      } else if (metaDataSource.hasSetter(propertyName)) {
-        //如存在，则获取值
+      }
+      /**通过反射器校验datasource对象是否包含<datasource></datasource>标签下配置的属性*/
+      else if (metaDataSource.hasSetter(propertyName)) {
+        /**获取property属性值*/
         String value = (String) properties.get(propertyName);
+        /**转换值*/
         Object convertedValue = convertValue(metaDataSource, propertyName, value);
+        /**设置值*/
         metaDataSource.setValue(propertyName, convertedValue);
       } else {
         throw new DataSourceException("Unknown DataSource property: " + propertyName);

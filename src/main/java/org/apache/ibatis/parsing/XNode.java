@@ -75,7 +75,7 @@ public class XNode {
 
   /**
    * 获取<association><collection>的id值，大概格式就是
-   * [_resultMapId_[_collection[propertyName]]]
+   * 标签名+[_resultMapId_[_collection[propertyName]]]
    * @return
    */
   public String getValueBasedIdentifier() {

@@ -26,11 +26,11 @@ import java.lang.reflect.Method;
  * 拦截器 intercept方法的 参数对象
  */
 public class Invocation {
-  //被代理对象，四大对象之一
+  /**被代理对象，四大对象之一*/
   private final Object target;
-  //被代理的方法名
+  /**被代理的方法名*/
   private final Method method;
-  //被代理的方法参数
+  /**被代理的方法参数*/
   private final Object[] args;
 
   public Invocation(Object target, Method method, Object[] args) {

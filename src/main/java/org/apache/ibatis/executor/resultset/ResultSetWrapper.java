@@ -36,23 +36,24 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 import org.apache.ibatis.type.UnknownTypeHandler;
 
 /**
+ * ResultSet转换器
  * @author Iwao AVE!
  */
 public class ResultSetWrapper {
-  //执行sql语句返回的结果集，JDBC的resultSet
+  /**执行sql语句返回的结果集，JDBC的resultSet*/
   private final ResultSet resultSet;
-  //typeHandler注册器
+  /**typeHandler注册器*/
   private final TypeHandlerRegistry typeHandlerRegistry;
-  //resultSet解析出来的列名集合
+  /**resultSet解析出来的列名集合*/
   private final List<String> columnNames = new ArrayList<>();
-  //列Class集合
+  /**列Class集合*/
   private final List<String> classNames = new ArrayList<>();
-  //jdbc类型
+  /**jdbc类型*/
   private final List<JdbcType> jdbcTypes = new ArrayList<>();
   private final Map<String, Map<Class<?>, TypeHandler<?>>> typeHandlerMap = new HashMap<>();
-  //存放<resultMap>中列名能和resultSet对应上的字段    映射关系是 resultMapId ->> 能对应上的列名集合
+  /**存放<resultMap>中列名能和resultSet对应上的字段    映射关系是 resultMapId ->> 能对应上的列名集合*/
   private final Map<String, List<String>> mappedColumnNamesMap = new HashMap<>();
-  //存放<resultMap>中列名不能和resultSet对应上的字段    映射关系是 resultMapId ->> 不能对应上的列名集合
+  /**存放<resultMap>中列名不能和resultSet对应上的字段    映射关系是 resultMapId ->> 不能对应上的列名集合*/
   private final Map<String, List<String>> unMappedColumnNamesMap = new HashMap<>();
 
   public ResultSetWrapper(ResultSet rs, Configuration configuration) throws SQLException {
