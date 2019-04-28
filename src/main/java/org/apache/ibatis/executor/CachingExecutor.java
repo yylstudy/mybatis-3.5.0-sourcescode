@@ -76,16 +76,14 @@ public class CachingExecutor implements Executor {
 
   @Override
   public int update(MappedStatement ms, Object parameterObject) throws SQLException {
-    /**
-     * 注意所谓的mybatis的一级、二级缓存的增删改去更新缓存，其实都是清空缓存的
-     * 所以这里是清空二级缓存
-     */
+    //注意所谓的mybatis的一级、二级缓存的增删改去更新缓存，其实都是清空缓存的 所以这里是清空二级缓存
     flushCacheIfRequired(ms);
     return delegate.update(ms, parameterObject);
   }
 
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
+    //获取BoundSql对象
     BoundSql boundSql = ms.getBoundSql(parameterObject);
     //创建缓存key，一级缓存和二级缓存的key应该是一样的
     CacheKey key = createCacheKey(ms, parameterObject, rowBounds, boundSql);

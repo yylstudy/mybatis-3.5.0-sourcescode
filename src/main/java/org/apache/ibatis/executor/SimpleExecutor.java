@@ -44,7 +44,8 @@ public class SimpleExecutor extends BaseExecutor {
    * 真正做update操作的地方
    * @param ms
    * @param parameter 参数名和参数值的映射关系，Map<String,Object>，
-   *      *                  若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身
+   *                  若参数只有一个且没有@Param注解，那么这个parameter
+   *                  就是第一个参数本身，否则就是参数名称和参数值的Map结构
    * @return
    * @throws SQLException
    */
@@ -53,9 +54,7 @@ public class SimpleExecutor extends BaseExecutor {
     Statement stmt = null;
     try {
       Configuration configuration = ms.getConfiguration();
-      /**
-       * 创建一个RoutingStatementHandler，这是SqlSession下的四大对象之一，用于获取statement
-       */
+      //创建一个RoutingStatementHandler，这是SqlSession下的四大对象之一，用于获取statement
       StatementHandler handler = configuration.newStatementHandler(this, ms, parameter, RowBounds.DEFAULT, null, null);
       /**获取一个Statement*/
       stmt = prepareStatement(handler, ms.getStatementLog());
@@ -82,7 +81,9 @@ public class SimpleExecutor extends BaseExecutor {
     try {
       Configuration configuration = ms.getConfiguration();
       StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
+      //准备PreparedStatement对象，这里已经完成参数填充
       stmt = prepareStatement(handler, ms.getStatementLog());
+      //执行查询方法
       return handler.<E>query(stmt, resultHandler);
     } finally {
       closeStatement(stmt);
@@ -113,10 +114,7 @@ public class SimpleExecutor extends BaseExecutor {
     Statement stmt;
     /**获取一个connection*/
     Connection connection = getConnection(statementLog);
-    /**
-     * 所以我们的分页拦截器是加在这个方法上的，StatementHandler，方法名为prepare
-     * 这个方法的目的是获取一个Statement，比如PreparedStatement
-     */
+    //获取Statement对象
     stmt = handler.prepare(connection, transaction.getTimeout());
     /**参数初始化，这里就是使用到创建StatementHandler时创建的ParameterHandler*/
     handler.parameterize(stmt);

@@ -71,11 +71,12 @@ public class XMLScriptBuilder extends BaseBuilder {
    * @return
    */
   public SqlSource parseScriptNode() {
-    /**解析动态标签*/
+    //解析动态标签，这里的动态标签的意思是sql语句中包含${}或者<if>等动态标签
+    //${}和#{}的区别从这里也可以体现出来，即使包含#{}但是不包含${}，那么依然是静态节点
     MixedSqlNode rootSqlNode = parseDynamicTags(context);
     SqlSource sqlSource = null;
     if (isDynamic) {
-      //若是动态创建动态SqlSource
+      //若是动态创建动态SqlSource(包含${})
       sqlSource = new DynamicSqlSource(configuration, rootSqlNode);
     } else {
       //否则创建原生SqlSource，这个也是装饰类，内有被装饰的sqlSource，是staticSqlSource
@@ -91,7 +92,7 @@ public class XMLScriptBuilder extends BaseBuilder {
    */
   protected MixedSqlNode parseDynamicTags(XNode node) {
     List<SqlNode> contents = new ArrayList<>();
-    /**获取所有子标签*/
+    /**获取所有子标签，一个标签一段，所以一个sql语句可能有多个标签，将多个标签的sql解析出来，再拼接上就是完整的sql语句了*/
     NodeList children = node.getNode().getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
       /**将node子节点转化为node的XNode子节点*/

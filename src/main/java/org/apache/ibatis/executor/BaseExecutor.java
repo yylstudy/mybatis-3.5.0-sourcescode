@@ -50,7 +50,7 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 public abstract class BaseExecutor implements Executor {
 
   private static final Log log = LogFactory.getLog(BaseExecutor.class);
-  /**事务对象JdbcTransaction*/
+  /**事务对象JdbcTransaction（引入spring的话，就是SpringManagedTransaction）*/
   protected Transaction transaction;
   /**CacheExecutor*/
   protected Executor wrapper;
@@ -124,9 +124,7 @@ public abstract class BaseExecutor implements Executor {
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
-    /**
-     * 清空本地缓存，也就是一级缓存
-     */
+    //清空本地缓存，也就是一级缓存
     clearLocalCache();
     return doUpdate(ms, parameter);
   }

@@ -73,6 +73,7 @@ public final class MappedStatement {
   private String[] keyColumns;
   //association、collection的是否包含resultMap
   private boolean hasNestedResultMaps;
+  //databaseId
   private String databaseId;
   //log类型
   private Log statementLog;

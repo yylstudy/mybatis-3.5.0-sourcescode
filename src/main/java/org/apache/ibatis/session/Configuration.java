@@ -156,7 +156,9 @@ public class Configuration {
   protected boolean lazyLoadingEnabled = false;
   /**指定mybatis创建具有延迟加载能力的对象所用到的代理工具*/
   protected ProxyFactory proxyFactory = new JavassistProxyFactory(); // #224 Using internal Javassist instead of OGNL
-
+  /**
+   * 数据库厂商，这个和MappedStatement中的databaseId做对应，这样就能区别某个数据库厂商执行某个MappedStatement
+   */
   protected String databaseId;
   /**
    * Configuration factory class.
@@ -607,6 +609,7 @@ public class Configuration {
    */
   public ParameterHandler newParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql) {
     ParameterHandler parameterHandler = mappedStatement.getLang().createParameterHandler(mappedStatement, parameterObject, boundSql);
+    //获取肯能存在拦截器的代理对象
     parameterHandler = (ParameterHandler) interceptorChain.pluginAll(parameterHandler);
     return parameterHandler;
   }
@@ -623,6 +626,7 @@ public class Configuration {
    */
   public ResultSetHandler newResultSetHandler(Executor executor, MappedStatement mappedStatement, RowBounds rowBounds, ParameterHandler parameterHandler,
       ResultHandler resultHandler, BoundSql boundSql) {
+    //创建DefaultResultSetHandler
     ResultSetHandler resultSetHandler = new DefaultResultSetHandler(executor, mappedStatement, parameterHandler, resultHandler, boundSql, rowBounds);
     resultSetHandler = (ResultSetHandler) interceptorChain.pluginAll(resultSetHandler);
     return resultSetHandler;
@@ -674,7 +678,7 @@ public class Configuration {
       /**缓存执行器装饰类*/
       executor = new CachingExecutor(executor);
     }
-    /**判断是否存在作用于Executor的拦截器*/
+    //判断是否存在作用于Executor的拦截器
     executor = (Executor) interceptorChain.pluginAll(executor);
     return executor;
   }

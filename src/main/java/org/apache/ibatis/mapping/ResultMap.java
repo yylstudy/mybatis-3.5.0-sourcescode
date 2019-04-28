@@ -115,6 +115,7 @@ public class ResultMap {
         //获取列名
         final String column = resultMapping.getColumn();
         if (column != null) {
+          //添加列名大写进resultMap对象中
           resultMap.mappedColumns.add(column.toUpperCase(Locale.ENGLISH));
         } else if (resultMapping.isCompositeResult()) {
           for (ResultMapping compositeResultMapping : resultMapping.getComposites()) {
@@ -124,7 +125,7 @@ public class ResultMap {
             }
           }
         }
-        //获取字段名
+        //获取属性名
         final String property = resultMapping.getProperty();
         if(property != null) {
           resultMap.mappedProperties.add(property);

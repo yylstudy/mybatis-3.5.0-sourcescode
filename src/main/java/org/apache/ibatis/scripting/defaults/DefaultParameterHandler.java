@@ -100,10 +100,7 @@ public class DefaultParameterHandler implements ParameterHandler {
             jdbcType = configuration.getJdbcTypeForNull();
           }
           try {
-            /**
-             * 这里就是调用typeHandler处理参数，也就是在这里把sql的?替换成值，这个就是preparedStatement
-             * 的方法
-             */
+            //这里就是调用typeHandler处理参数，也就是在这里把sql的?替换成值，这个就是preparedStatement的方法
             typeHandler.setParameter(ps, i + 1, value, jdbcType);
           } catch (TypeException e) {
             throw new TypeException("Could not set parameters for mapping: " + parameterMapping + ". Cause: " + e, e);

@@ -25,7 +25,7 @@ import java.util.List;
  * 标签语句类，里面存有一个SqlNode数组，表示这个标签下各个节点（文本、子标签等等）
  */
 public class MixedSqlNode implements SqlNode {
-  /**存放sql的各个子标签（包含动态和静态）*/
+  /**存放sql的各个子标签（包含动态（包含${}）和静态）*/
   private final List<SqlNode> contents;
 
   public MixedSqlNode(List<SqlNode> contents) {

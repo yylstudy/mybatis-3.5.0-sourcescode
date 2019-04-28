@@ -42,6 +42,10 @@ public class DefaultResultHandler implements ResultHandler<Object> {
     list = objectFactory.create(List.class);
   }
 
+  /**
+   * 添加结果解
+   * @param context
+   */
   @Override
   public void handleResult(ResultContext<? extends Object> context) {
     list.add(context.getResultObject());

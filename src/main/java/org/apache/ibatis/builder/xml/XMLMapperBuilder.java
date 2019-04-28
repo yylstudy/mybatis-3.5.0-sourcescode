@@ -164,8 +164,10 @@ public class XMLMapperBuilder extends BaseBuilder {
    */
   private void buildStatementFromContext(List<XNode> list) {
     if (configuration.getDatabaseId() != null) {
+      //先去匹配和configuration中databaseId一致的mappedStatement
       buildStatementFromContext(list, configuration.getDatabaseId());
     }
+    //再去匹配databaseId为空的mappedStatement
     buildStatementFromContext(list, null);
   }
 
@@ -241,6 +243,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       configuration.addCacheRef(builderAssistant.getCurrentNamespace(), context.getStringAttribute("namespace"));
       CacheRefResolver cacheRefResolver = new CacheRefResolver(builderAssistant, context.getStringAttribute("namespace"));
       try {
+        //解析CacheRef
         cacheRefResolver.resolveCacheRef();
       } catch (IncompleteElementException e) {
         configuration.addIncompleteCacheRef(cacheRefResolver);
@@ -336,26 +339,23 @@ public class XMLMapperBuilder extends BaseBuilder {
    */
   private ResultMap resultMapElement(XNode resultMapNode, List<ResultMapping> additionalResultMappings) throws Exception {
     ErrorContext.instance().activity("processing " + resultMapNode.getValueBasedIdentifier());
-    /**
-     * 获取id值，这里的id值可能是resultMap的id属性，如果是<association><collection>标签
-     * 那么是没有id属性的就需要通过resultMapNode.getValueBasedIdentifier()方法获取
-     */
+    //获取id值，这里的id值可能是resultMap的id属性，如果是<association><collection>标签
+    //那么是没有id属性的就需要通过resultMapNode.getValueBasedIdentifier()方法获取
     String id = resultMapNode.getStringAttribute("id",
         resultMapNode.getValueBasedIdentifier());
-    /**
-     * 获取type值，如果是<collection>标签，那么就是获取ofType，如果是<association>
-     * 标签，那么就是javaType
-     */
+    //获取type值，如果是<collection>标签，那么就是获取ofType，如果是<association>
+    // 标签，那么就是javaType
     String type = resultMapNode.getStringAttribute("type",
         resultMapNode.getStringAttribute("ofType",
             resultMapNode.getStringAttribute("resultType",
                 resultMapNode.getStringAttribute("javaType"))));
+    //获取继承的resultMap
     String extend = resultMapNode.getStringAttribute("extends");
     Boolean autoMapping = resultMapNode.getBooleanAttribute("autoMapping");
     //获取type对应的Class
     Class<?> typeClass = resolveClass(type);
     Discriminator discriminator = null;
-    //这个其实是resultMapp下的子元素的对象集合
+    //resultMap下的子元素集合，每一个result或者id属性都是一个ResultMapping对象
     List<ResultMapping> resultMappings = new ArrayList<>();
     resultMappings.addAll(additionalResultMappings);
     List<XNode> resultChildren = resultMapNode.getChildren();
@@ -368,6 +368,7 @@ public class XMLMapperBuilder extends BaseBuilder {
         //解析discriminator
         discriminator = processDiscriminatorElement(resultChild, typeClass, resultMappings);
       } else {
+        //id或者result标签
         List<ResultFlag> flags = new ArrayList<>();
         if ("id".equals(resultChild.getName())) {
           flags.add(ResultFlag.ID);
@@ -422,10 +423,17 @@ public class XMLMapperBuilder extends BaseBuilder {
     return builderAssistant.buildDiscriminator(resultType, column, javaTypeClass, jdbcTypeEnum, typeHandlerClass, discriminatorMap);
   }
 
+  /**
+   * 解析sql
+   * @param list
+   * @throws Exception
+   */
   private void sqlElement(List<XNode> list) throws Exception {
     if (configuration.getDatabaseId() != null) {
+      //当configuration中配置了databaseId时，先去匹配和该databaseId一致的sql
       sqlElement(list, configuration.getDatabaseId());
     }
+    //再去匹配databaseId为空的sql
     sqlElement(list, null);
   }
 
@@ -435,12 +443,20 @@ public class XMLMapperBuilder extends BaseBuilder {
       String id = context.getStringAttribute("id");
       //获取sql的唯一标识，和resultMap一样，格式都是 daoName+"."+id
       id = builderAssistant.applyCurrentNamespace(id, false);
+      //校验当前sql的数据库产商和configuration中的厂商是否一致
       if (databaseIdMatchesCurrent(id, databaseId, requiredDatabaseId)) {
         sqlFragments.put(id, context);
       }
     }
   }
-  
+
+  /**
+   * 校验当前sql的databaseId和configuration中的是否一致
+   * @param id
+   * @param databaseId
+   * @param requiredDatabaseId
+   * @return
+   */
   private boolean databaseIdMatchesCurrent(String id, String databaseId, String requiredDatabaseId) {
     if (requiredDatabaseId != null) {
       if (!requiredDatabaseId.equals(databaseId)) {
@@ -485,14 +501,13 @@ public class XMLMapperBuilder extends BaseBuilder {
     String jdbcType = context.getStringAttribute("jdbcType");
     //select属性值，主要用于联合查询
     String nestedSelect = context.getStringAttribute("select");
-    /**
-     * 返回resultMap的id，若是不存在，并且标签为 association、collection、case，并且select元素为空
-     * 则进行递归解析并返回resultMap的id
-     */
+    //返回resultMap的id，若是不存在，并且标签为 association、collection、case，并且select元素为空
+    // 则进行递归解析并返回resultMap的id
     String nestedResultMap = context.getStringAttribute("resultMap",
         processNestedResultMappings(context, Collections.<ResultMapping> emptyList()));
     String notNullColumn = context.getStringAttribute("notNullColumn");
     String columnPrefix = context.getStringAttribute("columnPrefix");
+    //获取typeHandler
     String typeHandler = context.getStringAttribute("typeHandler");
     String resultSet = context.getStringAttribute("resultSet");
     String foreignColumn = context.getStringAttribute("foreignColumn");

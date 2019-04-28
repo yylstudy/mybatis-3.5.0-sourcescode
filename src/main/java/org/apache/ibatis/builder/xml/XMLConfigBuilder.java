@@ -129,7 +129,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       typeAliasesElement(root.evalNode("typeAliases"));
       //解析plugins属性
       pluginElement(root.evalNode("plugins"));
-      //解析ObejctFactory属性，这个属性主要是用于创建查询时返回类型的bean
+      //解析ObejctFactory属性，这个属性主要是用于创建 query时的bean对象
       objectFactoryElement(root.evalNode("objectFactory"));
       //解析ObjectWrapperFactory属性
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
@@ -140,7 +140,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       // read it after objectFactory and objectWrapperFactory issue #631
       //解析environments属性
       environmentsElement(root.evalNode("environments"));
-      //解析databaseIdProvider
+      //解析databaseIdProvider，可以根据这个由不同的数据库执行不同的语句
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
       //解析typeHandler属性
       typeHandlerElement(root.evalNode("typeHandlers"));
@@ -165,7 +165,7 @@ public class XMLConfigBuilder extends BaseBuilder {
     // Check that all settings are known to the configuration class
     /**获取Configuration的源class对象*/
     MetaClass metaConfig = MetaClass.forClass(Configuration.class, localReflectorFactory);
-    /** 校验Configuration类是否包含<settings></settings>配置的key，若不包含，则抛出异常*/
+    /** 校验Settings下的属性名定义是否存在于Configuration */
     for (Object key : props.keySet()) {
       if (!metaConfig.hasSetter(String.valueOf(key))) {
         throw new BuilderException("The setting " + key + " is not known.  Make sure you spelled it correctly (case sensitive).");
@@ -352,7 +352,7 @@ public class XMLConfigBuilder extends BaseBuilder {
           TransactionFactory txFactory = transactionManagerElement(child.evalNode("transactionManager"));
           //获取DataSourceFactory
           DataSourceFactory dsFactory = dataSourceElement(child.evalNode("dataSource"));
-          //返回数据源工厂中的数据源
+          //返回数据源工厂中的数据源 PooledDataSource
           DataSource dataSource = dsFactory.getDataSource();
           //建造者模式构建 Environment.Builder，Builder包含上面解析出来的三个属性
           Environment.Builder environmentBuilder = new Environment.Builder(id)
@@ -364,20 +364,28 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * 解析databaseIdProvider，可以根据这个由不同的数据库执行不同的语句
+   * @param context
+   * @throws Exception
+   */
   private void databaseIdProviderElement(XNode context) throws Exception {
     DatabaseIdProvider databaseIdProvider = null;
     if (context != null) {
+      //获取自定义DataBaseIdProvicer的类型
       String type = context.getStringAttribute("type");
       // awful patch to keep backward compatibility
       if ("VENDOR".equals(type)) {
           type = "DB_VENDOR";
       }
+      //获取<databaseIdProvider/>标签下的所有属性
       Properties properties = context.getChildrenAsProperties();
       databaseIdProvider = (DatabaseIdProvider) resolveClass(type).newInstance();
       databaseIdProvider.setProperties(properties);
     }
     Environment environment = configuration.getEnvironment();
     if (environment != null && databaseIdProvider != null) {
+      //调用其getDatabaseId方法，获取数据库的厂商
       String databaseId = databaseIdProvider.getDatabaseId(environment.getDataSource());
       configuration.setDatabaseId(databaseId);
     }

@@ -22,7 +22,10 @@ import java.util.Map;
  * @author Frank D. Martinez [mnesarco]
  */
 public class LanguageDriverRegistry {
-  /**语言驱动类和其实例的集合*/
+  /**语言驱动类和其实例的集合，一般有
+   * XMLLanguageDriver
+   * XMLLanguageDriver
+   */
   private final Map<Class<? extends LanguageDriver>, LanguageDriver> LANGUAGE_DRIVER_MAP = new HashMap<>();
   /**默认的语言驱动类  XMLLanguageDriver*/
   private Class<? extends LanguageDriver> defaultDriverClass;

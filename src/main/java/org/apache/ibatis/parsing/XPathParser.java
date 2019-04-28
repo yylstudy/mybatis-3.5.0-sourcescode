@@ -45,7 +45,10 @@ import org.xml.sax.SAXParseException;
 public class XPathParser {
   /**资源解析文件的Document实例*/
   private final Document document;
-  private boolean validation;//true
+  /**
+   * 是否检验，一般是true
+   */
+  private boolean validation;
   /**XMLMapperEntityResolver mybatis的xml文件的解析类*/
   private EntityResolver entityResolver;
   /**存放configuration解析完成的<properties/>标签*/

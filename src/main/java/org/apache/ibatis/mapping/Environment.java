@@ -27,7 +27,7 @@ public final class Environment {
   private final String id;
   /**事务工厂 JdbcTransactionFactory*/
   private final TransactionFactory transactionFactory;
-  /**数据源对象*/
+  /**数据源对象 PooledDataSource*/
   private final DataSource dataSource;
 
   public Environment(String id, TransactionFactory transactionFactory, DataSource dataSource) {

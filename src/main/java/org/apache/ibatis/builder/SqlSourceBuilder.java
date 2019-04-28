@@ -47,10 +47,8 @@ public class SqlSourceBuilder extends BaseBuilder {
    * @return
    */
   public SqlSource parse(String originalSql, Class<?> parameterType, Map<String, Object> additionalParameters) {
-    /**
-     * 注意这个类有个方法handleToken，会在下面的parse.parse方法中调用到，handleToken中会获取
-     * parameterMapping，这是个隐藏点，之前一直找不到在哪里进行ParameterMap中parameterMappings的赋值
-     */
+    //注意这个类有个方法handleToken，会在下面的parse.parse方法中调用到，handleToken中会获取
+    //parameterMapping，这是个隐藏点，之前一直找不到在哪里进行ParameterMap中parameterMappings的赋值
     ParameterMappingTokenHandler handler = new ParameterMappingTokenHandler(configuration, parameterType, additionalParameters);
     GenericTokenParser parser = new GenericTokenParser("#{", "}", handler);
     //解析 #{} ，将#{}转化为?，获取PreparedStatement需要的sql语句，例如 select * from test where id=?
@@ -77,6 +75,11 @@ public class SqlSourceBuilder extends BaseBuilder {
       return parameterMappings;
     }
 
+    /**
+     * 解析sql语句中的#{}，主要将其替换成?,并且记录相应的ParameterMapping对象
+     * @param content
+     * @return
+     */
     @Override
     public String handleToken(String content) {
       parameterMappings.add(buildParameterMapping(content));
@@ -90,10 +93,11 @@ public class SqlSourceBuilder extends BaseBuilder {
      * @return
      */
     private ParameterMapping buildParameterMapping(String content) {
-      /**将表达式解析成键值对*/
+      //将#{}表达式中的语句解析成Map
       Map<String, String> propertiesMap = parseParameterMapping(content);
       //获取属性key，上面的例子，就是name
       String property = propertiesMap.get("property");
+      //获取字段类型
       Class<?> propertyType;
       if (metaParameters.hasGetter(property)) { // issue #448 get type from additional params
         //获取参数的类型
@@ -106,7 +110,7 @@ public class SqlSourceBuilder extends BaseBuilder {
       } else if (property == null || Map.class.isAssignableFrom(parameterType)) {
         propertyType = Object.class;
       } else {
-        /**若上面都查找不到proeprty属性，那么构建一个参数类型的反射器，从其中查找*/
+        //若上面都查找不到proeprty属性，那么构建一个参数类型的反射器，从其中查找
         MetaClass metaClass = MetaClass.forClass(parameterType, configuration.getReflectorFactory());
         if (metaClass.hasGetter(property)) {
           propertyType = metaClass.getGetterType(property);
@@ -114,6 +118,7 @@ public class SqlSourceBuilder extends BaseBuilder {
           propertyType = Object.class;
         }
       }
+      //创建ParameterMapping对象
       ParameterMapping.Builder builder = new ParameterMapping.Builder(configuration, property, propertyType);
       Class<?> javaType = propertyType;
       String typeHandlerAlias = null;

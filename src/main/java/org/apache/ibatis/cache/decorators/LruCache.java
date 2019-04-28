@@ -34,6 +34,10 @@ public class LruCache implements Cache {
   /**存放将要删除的缓存的key值*/
   private Object eldestKey;
 
+  /**
+   * 被装饰的缓存类
+   * @param delegate
+   */
   public LruCache(Cache delegate) {
     this.delegate = delegate;
     setSize(1024);

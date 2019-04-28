@@ -56,6 +56,12 @@ public class ResultSetWrapper {
   /**存放<resultMap>中列名不能和resultSet对应上的字段    映射关系是 resultMapId ->> 不能对应上的列名集合*/
   private final Map<String, List<String>> unMappedColumnNamesMap = new HashMap<>();
 
+  /**
+   * 创建ResultSet转换器
+   * @param rs
+   * @param configuration
+   * @throws SQLException
+   */
   public ResultSetWrapper(ResultSet rs, Configuration configuration) throws SQLException {
     super();
     this.typeHandlerRegistry = configuration.getTypeHandlerRegistry();

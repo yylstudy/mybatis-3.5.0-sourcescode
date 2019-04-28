@@ -31,7 +31,7 @@ public class UnpooledDataSourceFactory implements DataSourceFactory {
 
   private static final String DRIVER_PROPERTY_PREFIX = "driver.";
   private static final int DRIVER_PROPERTY_PREFIX_LENGTH = DRIVER_PROPERTY_PREFIX.length();
-  /**mybatis的datasource数据源*/
+  /**mybatis的datasource数据源 PooledDataSource 这个装饰了最终的数据源 UnpooledDataSource*/
   protected DataSource dataSource;
 
   public UnpooledDataSourceFactory() {
@@ -40,7 +40,6 @@ public class UnpooledDataSourceFactory implements DataSourceFactory {
 
   @Override
   /**
-   * debug看下
    * 根据<dataSource>标签下的property属性填充dataSource
    */
   public void setProperties(Properties properties) {

@@ -66,7 +66,7 @@ public class MapperMethod {
       //insert 语句
       case INSERT: {
         //参数名和参数值的映射关系，Map<String,Object>，若参数只有一个且没有@Param注解，那么这个
-        //     param就是第一个参数本身
+        //     param就是第一个参数本身，否则就是参数名和参数值的Map结构
     	Object param = method.convertArgsToSqlCommandParam(args);
         result = rowCountResult(sqlSession.insert(command.getName(), param));
         break;

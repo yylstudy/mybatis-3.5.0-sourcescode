@@ -56,16 +56,12 @@ public class ParamNameResolver {
    * @param method 被代理方法
    */
   public ParamNameResolver(Configuration config, Method method) {
-    /**获取方法参数类型数组*/
+    //获取方法参数类型数组
     final Class<?>[] paramTypes = method.getParameterTypes();
-    /**
-     * 获取方法参数注解
-     * 这里是个二维数组的原因是因为 一个才能参数上可以有多个注解
-     * 第一个下标表示参数的个数，第二个下标表示参数上具体的注解
-     */
+    //获取方法参数的二维数组
     final Annotation[][] paramAnnotations = method.getParameterAnnotations();
     final SortedMap<Integer, String> map = new TreeMap<>();
-    /**参数个数*/
+    //参数个数
     int paramCount = paramAnnotations.length;
     // get names from @Param annotations
     for (int paramIndex = 0; paramIndex < paramCount; paramIndex++) {

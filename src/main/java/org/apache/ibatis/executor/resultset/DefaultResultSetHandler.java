@@ -375,7 +375,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       //对于association、collection的包含resultMap或者不包含select元素的解析行值
       handleRowValuesForNestedResultMap(rsw, resultMap, resultHandler, rowBounds, parentMapping);
     } else {
-      //对于association、collection的可能包含select元素的解析行值
+      //普通的行值解析
       handleRowValuesForSimpleResultMap(rsw, resultMap, resultHandler, rowBounds, parentMapping);
     }
   }
@@ -395,12 +395,22 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     }
   }
 
+  /**
+   * 普通的行值解析
+   * @param rsw
+   * @param resultMap
+   * @param resultHandler
+   * @param rowBounds
+   * @param parentMapping
+   * @throws SQLException
+   */
   private void handleRowValuesForSimpleResultMap(ResultSetWrapper rsw, ResultMap resultMap, ResultHandler<?> resultHandler, RowBounds rowBounds, ResultMapping parentMapping)
       throws SQLException {
     DefaultResultContext<Object> resultContext = new DefaultResultContext<>();
     skipRows(rsw.getResultSet(), rowBounds);
     while (shouldProcessMoreRows(resultContext, rowBounds) && rsw.getResultSet().next()) {
       ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(rsw.getResultSet(), resultMap, null);
+      //获取行值
       Object rowValue = getRowValue(rsw, discriminatedResultMap, null);
       storeObject(resultHandler, resultContext, rowValue, parentMapping, rsw.getResultSet());
     }
@@ -456,11 +466,14 @@ public class DefaultResultSetHandler implements ResultSetHandler {
    */
   private Object getRowValue(ResultSetWrapper rsw, ResultMap resultMap, String columnPrefix) throws SQLException {
     final ResultLoaderMap lazyLoader = new ResultLoaderMap();
+    //创建用于承载的JavaBean
     Object rowValue = createResultObject(rsw, resultMap, lazyLoader, columnPrefix);
     if (rowValue != null && !hasTypeHandlerForResultObject(rsw, resultMap.getType())) {
       final MetaObject metaObject = configuration.newMetaObject(rowValue);
       boolean foundValues = this.useConstructorMappings;
+      //是否自动映射，默认是true
       if (shouldApplyAutomaticMappings(resultMap, false)) {
+        //执行自动映射
         foundValues = applyAutomaticMappings(rsw, resultMap, metaObject, columnPrefix) || foundValues;
       }
       foundValues = applyPropertyMappings(rsw, resultMap, metaObject, lazyLoader, columnPrefix) || foundValues;
@@ -562,11 +575,21 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     }
   }
 
+  /**
+   * 创建自动映射的Mapping
+   * @param rsw
+   * @param resultMap
+   * @param metaObject
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private List<UnMappedColumnAutoMapping> createAutomaticMappings(ResultSetWrapper rsw, ResultMap resultMap, MetaObject metaObject, String columnPrefix) throws SQLException {
     final String mapKey = resultMap.getId() + ":" + columnPrefix;
     List<UnMappedColumnAutoMapping> autoMapping = autoMappingsCache.get(mapKey);
     if (autoMapping == null) {
       autoMapping = new ArrayList<>();
+      //获取不匹配的字段名（设置为resultType，一般就都是不匹配的）
       final List<String> unmappedColumnNames = rsw.getUnmappedColumnNames(resultMap, columnPrefix);
       for (String columnName : unmappedColumnNames) {
         String propertyName = columnName;
@@ -585,6 +608,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
             continue;
           }
           final Class<?> propertyType = metaObject.getSetterType(property);
+          //存在TypeHandler，mybatis中有默认的TypeHandler
           if (typeHandlerRegistry.hasTypeHandler(propertyType, rsw.getJdbcType(columnName))) {
             final TypeHandler<?> typeHandler = rsw.getTypeHandler(propertyType, columnName);
             autoMapping.add(new UnMappedColumnAutoMapping(columnName, property, typeHandler, propertyType.isPrimitive()));
@@ -602,7 +626,17 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return autoMapping;
   }
 
+  /**
+   * 执行自动映射
+   * @param rsw
+   * @param resultMap
+   * @param metaObject
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private boolean applyAutomaticMappings(ResultSetWrapper rsw, ResultMap resultMap, MetaObject metaObject, String columnPrefix) throws SQLException {
+    //获取不匹配的
     List<UnMappedColumnAutoMapping> autoMapping = createAutomaticMappings(rsw, resultMap, metaObject, columnPrefix);
     boolean foundValues = false;
     if (!autoMapping.isEmpty()) {
@@ -1052,7 +1086,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   //
 
   /**
-   * //对于association、collection的包含resultMap元素的解析行值
+   * 对于association、collection的包含resultMap元素的解析行值
    * @param rsw resultSet的封装类
    * @param resultMap
    * @param resultHandler
@@ -1119,7 +1153,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     } else {
       //第一次进来这个值应该是空的
       final ResultLoaderMap lazyLoader = new ResultLoaderMap();
-      //创建每行的对象，也就是值
+      //创建每行的对象（属性为null的JavaBean对象）
       rowValue = createResultObject(rsw, resultMap, lazyLoader, columnPrefix);
       /**javaBean不为空，并且创建出来的JavaBean不存在其类型的TypeHandler*/
       if (rowValue != null && !hasTypeHandlerForResultObject(rsw, resultMap.getType())) {
@@ -1138,6 +1172,8 @@ public class DefaultResultSetHandler implements ResultSetHandler {
         foundValues = applyNestedResultMappings(rsw, resultMap, metaObject, columnPrefix, combinedKey, true) || foundValues;
         ancestorObjects.remove(resultMapId);
         foundValues = lazyLoader.size() > 0 || foundValues;
+        //这里可以看到，如果一行中都未查询到值，并且setting中未配置当查询的行都为空时返回空的JavaBean时，则直接返回null
+        //而不是空的javaBean
         rowValue = foundValues || configuration.isReturnInstanceForEmptyRow() ? rowValue : null;
       }
       if (combinedKey != CacheKey.NULL_CACHE_KEY) {

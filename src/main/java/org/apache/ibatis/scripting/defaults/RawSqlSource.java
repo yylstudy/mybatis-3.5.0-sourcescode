@@ -33,7 +33,7 @@ import org.apache.ibatis.session.Configuration;
  * @author Eduardo Macarron
  */
 public class RawSqlSource implements SqlSource {
-  /**StaticSqlSource*/
+  /**真正的SqlSource对象，也就是被装饰的 StaticSqlSource*/
   private final SqlSource sqlSource;
 
   /**
@@ -46,9 +46,16 @@ public class RawSqlSource implements SqlSource {
     this(configuration, getSql(configuration, rootSqlNode), parameterType);
   }
 
+  /**
+   * 创建RawSqlSource对象
+   * @param configuration
+   * @param sql
+   * @param parameterType
+   */
   public RawSqlSource(Configuration configuration, String sql, Class<?> parameterType) {
     SqlSourceBuilder sqlSourceParser = new SqlSourceBuilder(configuration);
     Class<?> clazz = parameterType == null ? Object.class : parameterType;
+    //创建被装饰的StaticSqlSource
     sqlSource = sqlSourceParser.parse(sql, clazz, new HashMap<String, Object>());
   }
 

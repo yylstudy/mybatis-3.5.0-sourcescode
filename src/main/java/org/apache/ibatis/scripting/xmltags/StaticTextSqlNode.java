@@ -23,7 +23,7 @@ package org.apache.ibatis.scripting.xmltags;
  * 纯静态文本sql节点对象
  */
 public class StaticTextSqlNode implements SqlNode {
-  /**sql语句*/
+  /**部分 sql语句*/
   private final String text;
 
   public StaticTextSqlNode(String text) {

@@ -30,7 +30,7 @@ public class ParamNameUtil {
   }
 
   /**
-   * 获取参数名称集合，这里参数名称只是 arg0,arg1好像，但是jdk1.8以上版本就是真正的参数名称
+   * 获取参数名称集合，这里参数名称只是 ，这个需要jdk1.8版本并且开启参数名称显示
    * @param constructor
    * @return
    */

@@ -101,7 +101,8 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
       final Environment environment = configuration.getEnvironment();
       /**创建事务工厂，默认是ManagedTransactionFactory，常用的有JdbcTransactionFactory*/
       final TransactionFactory transactionFactory = getTransactionFactoryFromEnvironment(environment);
-      /**创建一个事务JdbcTransaction*/
+      //创建一个事务JdbcTransaction（如果结合spring的话，那么上面的事务工厂实现类是SpringManagedTransactionFactory
+      //SpringManagedTransactionFactory重写了newTransaction()方法，）
       tx = transactionFactory.newTransaction(environment.getDataSource(), level, autoCommit);
       /**创建一个执行器SimpleExecutor*/
       final Executor executor = configuration.newExecutor(tx, execType);

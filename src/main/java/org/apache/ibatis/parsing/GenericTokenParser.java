@@ -21,7 +21,7 @@ import org.apache.ibatis.scripting.xmltags.TextSqlNode;
  * @author Clinton Begin
  */
 public class GenericTokenParser {
-  /**开始的表达式 例如#{*/
+  /**开始的表达式 例如${ #{*/
   private final String openToken;
   /**结束的表达式 例如}*/
   private final String closeToken;

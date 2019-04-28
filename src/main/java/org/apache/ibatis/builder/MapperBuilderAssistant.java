@@ -352,13 +352,13 @@ public class MapperBuilderAssistant extends BaseBuilder {
         .lang(lang)
         .resultOrdered(resultOrdered)
         .resultSets(resultSets)
-        /**获取ResultMap*/
+        //获取ResultMap
         .resultMaps(getStatementResultMaps(resultMap, resultType, id))
         .resultSetType(resultSetType)
         .flushCacheRequired(valueOrDefault(flushCache, !isSelect))
         .useCache(valueOrDefault(useCache, isSelect))
         .cache(currentCache);
-    /**获取参数Map*/
+    //获取参数Map
     ParameterMap statementParameterMap = getStatementParameterMap(parameterMap, parameterType, id);
     if (statementParameterMap != null) {
       statementBuilder.parameterMap(statementParameterMap);
@@ -430,7 +430,9 @@ public class MapperBuilderAssistant extends BaseBuilder {
           throw new IncompleteElementException("Could not find result map " + resultMapName, e);
         }
       }
-    } else if (resultType != null) {
+    }
+    //resultType不为空
+    else if (resultType != null) {
       ResultMap inlineResultMap = new ResultMap.Builder(
           configuration,
           statementId + "-Inline",
@@ -480,7 +482,6 @@ public class MapperBuilderAssistant extends BaseBuilder {
     Class<?> javaTypeClass = resolveResultJavaType(resultType, property, javaType);
     //获取typeHandler实例
     TypeHandler<?> typeHandlerInstance = resolveTypeHandler(javaTypeClass, typeHandler);
-    //获取数据库字段
     List<ResultMapping> composites = parseCompositeColumnName(column);
     //构建器模式构建一个ResultMapping
     return new ResultMapping.Builder(configuration, property, column, javaTypeClass)

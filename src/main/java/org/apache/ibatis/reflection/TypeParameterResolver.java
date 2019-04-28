@@ -51,6 +51,7 @@ public class TypeParameterResolver {
    * @return
    */
   public static Type resolveReturnType(Method method, Type srcType) {
+    //获取返回类型的泛型类型
     Type returnType = method.getGenericReturnType();
     Class<?> declaringClass = method.getDeclaringClass();
     return resolveType(returnType, srcType, declaringClass);
@@ -81,7 +82,6 @@ public class TypeParameterResolver {
     //各种类型变量的公共父接口
     if (type instanceof TypeVariable) {
       return resolveTypeVar((TypeVariable<?>) type, srcType, declaringClass);
-      //ParameterizedType 表示一种参数化类型，比如Collection、Map
     } else if (type instanceof ParameterizedType) {
       return resolveParameterizedType((ParameterizedType) type, srcType, declaringClass);
       //表示元素类型是参数化类型或者类型变量的数组类型

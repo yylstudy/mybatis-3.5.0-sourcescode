@@ -4,7 +4,7 @@
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
  *    You may obtain a copy of the License at
- *
+ *wrap
  *       http://www.apache.org/licenses/LICENSE-2.0
  *
  *    Unless required by applicable law or agreed to in writing, software
@@ -34,7 +34,8 @@ public class Plugin implements InvocationHandler {
   private final Object target;
   /**拦截器*/
   private final Interceptor interceptor;
-  /**被代理的方法*/
+  /**需要代理的对象（SqlSession下的四大对象：Executor、StatementHandler、ParameterHandler、ResultHandler）
+   和其需要拦截的方法集合的映射*/
   private final Map<Class<?>, Set<Method>> signatureMap;
 
   private Plugin(Object target, Interceptor interceptor, Map<Class<?>, Set<Method>> signatureMap) {
@@ -44,13 +45,14 @@ public class Plugin implements InvocationHandler {
   }
 
   /**
-   * 生成拦截器处理过得代理对象
+   * 生成代理对象
    * @param target 要被代理的对象
    * @param interceptor 拦截器对象
    * @return
    */
   public static Object wrap(Object target, Interceptor interceptor) {
-    //获取拦截器注解上的值，封装成对象
+    //获取需要代理的对象（SqlSession下的四大对象：Executor、StatementHandler、ParameterHandler、ResultHandler）
+    //和其需要拦截的方法集合的映射
     Map<Class<?>, Set<Method>> signatureMap = getSignatureMap(interceptor);
     Class<?> type = target.getClass();
     //获取类符合的之前解析的签名Map的接口
@@ -67,7 +69,6 @@ public class Plugin implements InvocationHandler {
 
   /**
    * 拦截器真正的调用方法，这个方法是在拦截器的方法上调用的，而不是在mapper的方法，因为此时mapper方法肯定已经调用了
-   * 所以这个代理类是对四大对象的代理封装，那么怎么判断需要代理的方法呢？？？？？
    * @param proxy
    * @param method
    * @param args
@@ -89,6 +90,12 @@ public class Plugin implements InvocationHandler {
     }
   }
 
+  /**
+   * 获取需要代理的对象（SqlSession下的四大对象：Executor、StatementHandler、ParameterHandler、ResultHandler）
+   * 和其需要拦截的方法集合的映射
+   * @param interceptor
+   * @return
+   */
   private static Map<Class<?>, Set<Method>> getSignatureMap(Interceptor interceptor) {
     //获取拦截器上的@Intercepts的注解
     Intercepts interceptsAnnotation = interceptor.getClass().getAnnotation(Intercepts.class);

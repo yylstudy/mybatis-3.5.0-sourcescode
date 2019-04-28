@@ -61,18 +61,24 @@ public class XMLStatementBuilder extends BaseBuilder {
     //方法名
     String id = context.getStringAttribute("id");
     String databaseId = context.getStringAttribute("databaseId");
+    //匹配MappedStaement的databaseId是否一致
     if (!databaseIdMatchesCurrent(id, databaseId, this.requiredDatabaseId)) {
       return;
     }
-
+    //查询的长度
     Integer fetchSize = context.getIntAttribute("fetchSize");
+    //超时时间
     Integer timeout = context.getIntAttribute("timeout");
     String parameterMap = context.getStringAttribute("parameterMap");
+    //参数类型
     String parameterType = context.getStringAttribute("parameterType");
     Class<?> parameterTypeClass = resolveClass(parameterType);
+    //返回的resultMap
     String resultMap = context.getStringAttribute("resultMap");
+    //返回结果类型
     String resultType = context.getStringAttribute("resultType");
     String lang = context.getStringAttribute("lang");
+    //语言驱动类，默认是XMLLanguageDriver
     LanguageDriver langDriver = getLanguageDriver(lang);
 
     Class<?> resultTypeClass = resolveClass(resultType);
@@ -96,13 +102,13 @@ public class XMLStatementBuilder extends BaseBuilder {
 
     //解析selectKey元素并移除
     processSelectKeyNodes(id, parameterTypeClass, langDriver);
-    //解析sql语句（动态sql也是在这里解析的）
+    //根据参数类型将sql创建成SqlSource
     SqlSource sqlSource = langDriver.createSqlSource(configuration, context, parameterTypeClass);
     String resultSets = context.getStringAttribute("resultSets");
     String keyProperty = context.getStringAttribute("keyProperty");
     String keyColumn = context.getStringAttribute("keyColumn");
     KeyGenerator keyGenerator;
-    //方法名+!selectKey
+    //主键生成策略
     String keyStatementId = id + SelectKeyGenerator.SELECT_KEY_SUFFIX;
     //加上daoName
     keyStatementId = builderAssistant.applyCurrentNamespace(keyStatementId, true);
@@ -210,6 +216,13 @@ public class XMLStatementBuilder extends BaseBuilder {
     configuration.addKeyGenerator(id, new SelectKeyGenerator(keyStatement, executeBefore));
   }
 
+  /**
+   * 匹配MappedStaement的databaseId是否一致
+   * @param id
+   * @param databaseId
+   * @param requiredDatabaseId
+   * @return
+   */
   private boolean databaseIdMatchesCurrent(String id, String databaseId, String requiredDatabaseId) {
     if (requiredDatabaseId != null) {
       if (!requiredDatabaseId.equals(databaseId)) {

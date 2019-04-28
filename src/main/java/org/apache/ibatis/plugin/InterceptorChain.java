@@ -23,9 +23,17 @@ import java.util.List;
  * @author Clinton Begin
  */
 public class InterceptorChain {
-  //存放全局拦截器对象实例
+  /**
+   * 存放全局拦截器对象实例
+   */
   private final List<Interceptor> interceptors = new ArrayList<>();
 
+  /**
+   * 判断是否需要存在拦截器  通常的判断方法是Plugin.wrap(target,this);
+   * 1）判断是否存在于Executor的拦截器
+   * @param target
+   * @return
+   */
   public Object pluginAll(Object target) {
     for (Interceptor interceptor : interceptors) {
       target = interceptor.plugin(target);
