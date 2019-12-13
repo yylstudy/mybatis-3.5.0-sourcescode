@@ -43,7 +43,7 @@ public class DefaultResultHandler implements ResultHandler<Object> {
   }
 
   /**
-   * 添加结果解
+   * 添加结果
    * @param context
    */
   @Override

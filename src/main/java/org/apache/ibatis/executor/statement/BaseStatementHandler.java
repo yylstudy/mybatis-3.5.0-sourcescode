@@ -76,7 +76,7 @@ public abstract class BaseStatementHandler implements StatementHandler {
 
     if (boundSql == null) { // issue #435, get the key before calculating the statement
       generateKeys(parameterObject);
-      /**获取boundSql对象*/
+      //获取boundSql对象
       boundSql = mappedStatement.getBoundSql(parameterObject);
     }
 
@@ -109,11 +109,11 @@ public abstract class BaseStatementHandler implements StatementHandler {
     ErrorContext.instance().sql(boundSql.getSql());
     Statement statement = null;
     try {
-      /**初始化一个statement，比如经常使用到的PreparedStatement*/
+      //初始化一个statement，比如经常使用到的PreparedStatement
       statement = instantiateStatement(connection);
-      /**设置PreparedStatement超时时间*/
+      //设置PreparedStatement超时时间
       setStatementTimeout(statement, transactionTimeout);
-      /**设置查询结果集大小*/
+      //设置查询结果集大小
       setFetchSize(statement);
       return statement;
     } catch (SQLException e) {

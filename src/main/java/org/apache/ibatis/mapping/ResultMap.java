@@ -59,7 +59,7 @@ public class ResultMap {
   /**resultMap的属性字段名集合*/
   private Set<String> mappedProperties;
   private Discriminator discriminator;
-  /**association、collection的是否包含resultMap或者不包含select*/
+  /**association、collection的是否包含resultMap并且不包含 select*/
   private boolean hasNestedResultMaps;
   /**association、collection是否包含select 元素*/
   private boolean hasNestedQueries;

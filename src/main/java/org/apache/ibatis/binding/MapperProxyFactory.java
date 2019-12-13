@@ -53,7 +53,7 @@ public class MapperProxyFactory<T> {
    * @return
    */
   public T newInstance(SqlSession sqlSession) {
-    /**创建一个mapper的动态代理*/
+    //创建一个mapper的动态代理
     final MapperProxy<T> mapperProxy = new MapperProxy<>(sqlSession, mapperInterface, methodCache);
     return newInstance(mapperProxy);
   }

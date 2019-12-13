@@ -32,11 +32,29 @@ class PooledConnection implements InvocationHandler {
   private static final Class<?>[] IFACES = new Class<?>[] { Connection.class };
 
   private final int hashCode;
+  /**
+   * 数据源
+   */
   private final PooledDataSource dataSource;
+  /**
+   * 真正的数据库连接
+   */
   private final Connection realConnection;
+  /**
+   * 当前Connection的动态代理对象
+   */
   private final Connection proxyConnection;
+  /**
+   * 从连接池取出该连接的时间
+   */
   private long checkoutTimestamp;
+  /**
+   * 创建连接的时间
+   */
   private long createdTimestamp;
+  /**
+   * 最后使用连接的时间
+   */
   private long lastUsedTimestamp;
   private int connectionTypeCode;
   private boolean valid;
@@ -64,10 +82,8 @@ class PooledConnection implements InvocationHandler {
     valid = false;
   }
 
-  /*
-   * Method to see if the connection is usable
-   *
-   * @return True if the connection is usable
+  /**
+   * 判断此数据库连接是否可用
    */
   public boolean isValid() {
     return valid && realConnection != null && dataSource.pingConnection(this);
@@ -82,10 +98,8 @@ class PooledConnection implements InvocationHandler {
     return realConnection;
   }
 
-  /*
-   * Getter for the proxy for the connection
-   *
-   * @return The proxy
+  /**
+   * 获取连接的动态代理对象
    */
   public Connection getProxyConnection() {
     return proxyConnection;
@@ -221,17 +235,13 @@ class PooledConnection implements InvocationHandler {
     }
   }
 
-  /*
-   * Required for InvocationHandler implementation.
-   *
-   * @param proxy  - not used
-   * @param method - the method to be executed
-   * @param args   - the parameters to be passed to the method
-   * @see java.lang.reflect.InvocationHandler#invoke(Object, java.lang.reflect.Method, Object[])
+  /**
+   * 动态代理执行的方法
    */
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String methodName = method.getName();
+    //执行的是connection.close方法
     if (CLOSE.hashCode() == methodName.hashCode() && CLOSE.equals(methodName)) {
       dataSource.pushConnection(this);
       return null;
@@ -242,6 +252,7 @@ class PooledConnection implements InvocationHandler {
           // throw an SQLException instead of a Runtime
           checkConnection();
         }
+        //调用真正的连接方法
         return method.invoke(realConnection, args);
       } catch (Throwable t) {
         throw ExceptionUtil.unwrapThrowable(t);

@@ -25,6 +25,10 @@ public class GenericTokenParser {
   private final String openToken;
   /**结束的表达式 例如}*/
   private final String closeToken;
+  /**
+   * DynamicCheckerTokenParser 动态标签解析器
+   * BindingTokenParser 解析${}
+   */
   private final TokenHandler handler;
 
   public GenericTokenParser(String openToken, String closeToken, TokenHandler handler) {
@@ -82,7 +86,7 @@ public class GenericTokenParser {
             offset = end + closeToken.length();
             end = text.indexOf(closeToken, offset);
           } else {
-            /**获取${}、#{}中的表达式*/
+            //获取${}、#{}中的表达式
             expression.append(src, offset, end - offset);
             offset = end + closeToken.length();
             break;

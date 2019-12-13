@@ -41,12 +41,18 @@ public class BeanWrapper extends BaseWrapper {
     this.metaClass = MetaClass.forClass(object.getClass(), metaObject.getReflectorFactory());
   }
 
+  /**
+   * 获取属性的值
+   * @param prop
+   * @return
+   */
   @Override
   public Object get(PropertyTokenizer prop) {
     if (prop.getIndex() != null) {
       Object collection = resolveCollection(prop, object);
       return getCollectionValue(prop, collection);
     } else {
+      //根据真正对象和属性名获取值
       return getBeanProperty(prop, object);
     }
   }
@@ -81,14 +87,22 @@ public class BeanWrapper extends BaseWrapper {
     return metaClass.getSetterNames();
   }
 
+  /**
+   * 获取set方法的类型
+   * @param name
+   * @return
+   */
   @Override
   public Class<?> getSetterType(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
+    //xxx.yy 模式的
     if (prop.hasNext()) {
+      //获取xxx的MetaObject
       MetaObject metaValue = metaObject.metaObjectForProperty(prop.getIndexedName());
       if (metaValue == SystemMetaObject.NULL_META_OBJECT) {
         return metaClass.getSetterType(name);
       } else {
+        //递归调用获取 yy的set方法的类型
         return metaValue.getSetterType(prop.getChildren());
       }
     } else {
@@ -175,10 +189,17 @@ public class BeanWrapper extends BaseWrapper {
     return metaValue;
   }
 
+  /**
+   * 获取属性的值
+   * @param prop
+   * @param object
+   * @return
+   */
   private Object getBeanProperty(PropertyTokenizer prop, Object object) {
     try {
       Invoker method = metaClass.getGetInvoker(prop.getName());
       try {
+        //根据方法执行器获取值
         return method.invoke(object, NO_ARGUMENTS);
       } catch (Throwable t) {
         throw ExceptionUtil.unwrapThrowable(t);
@@ -198,11 +219,11 @@ public class BeanWrapper extends BaseWrapper {
    */
   private void setBeanProperty(PropertyTokenizer prop, Object object, Object value) {
     try {
-      /**获取对应属性或者set方法的Invoke*/
+      //获取对应属性或者set方法的Invoke
       Invoker method = metaClass.getSetInvoker(prop.getName());
       Object[] params = {value};
       try {
-        /**执行方法或者属性赋值*/
+        //执行方法或者属性赋值
         method.invoke(object, params);
       } catch (Throwable t) {
         throw ExceptionUtil.unwrapThrowable(t);

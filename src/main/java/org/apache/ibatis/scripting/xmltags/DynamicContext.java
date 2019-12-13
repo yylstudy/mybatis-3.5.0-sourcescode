@@ -37,7 +37,13 @@ public class DynamicContext {
   static {
     OgnlRuntime.setPropertyAccessor(ContextMap.class, new ContextAccessor());
   }
-  /**上下文Map，其中包含 参数的MetaObject 对象 ，并且包含参数值*/
+
+  /**
+   * 若参数只有一个且没有@Param注解，那么ContextMap中的parameterMetaObject就是此对象MetaObject
+   * 其中还包含两个键值对  _parameter->参数对象本身（参数名和参数值的映射关系，Map<String,Object>，
+   * 若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身）
+   * _databaseId-> 全局配置的databaseId
+   */
   private final ContextMap bindings;
   /**sql语句字符串*/
   private final StringBuilder sqlBuilder = new StringBuilder();
@@ -46,7 +52,8 @@ public class DynamicContext {
   /**
    *  构建动态上下文
    * @param configuration
-   * @param parameterObject 参数名和参数值的映射关系，Map<String,Object>
+   * @param parameterObject 参数名和参数值的映射关系，Map<String,Object>，
+   *  若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身
    */
   public DynamicContext(Configuration configuration, Object parameterObject) {
     if (parameterObject != null && !(parameterObject instanceof Map)) {

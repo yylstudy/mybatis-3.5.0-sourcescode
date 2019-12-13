@@ -48,9 +48,9 @@ public class MapperMethod {
   private final MethodSignature method;
 
   public MapperMethod(Class<?> mapperInterface, Method method, Configuration config) {
-    /**构建一个SqlCommand*/
+    //构建一个SqlCommand
     this.command = new SqlCommand(config, mapperInterface, method);
-    /**构建一个方法签名*/
+    //构建一个方法签名
     this.method = new MethodSignature(config, mapperInterface, method);
   }
 
@@ -159,6 +159,8 @@ public class MapperMethod {
    */
   private <E> Object executeForMany(SqlSession sqlSession, Object[] args) {
     List<E> result;
+    //参数名和参数值的映射关系，Map<String,Object>，
+    //若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身
     Object param = method.convertArgsToSqlCommandParam(args);
     if (method.hasRowBounds()) {
       RowBounds rowBounds = method.extractRowBounds(args);
@@ -249,7 +251,7 @@ public class MapperMethod {
     public SqlCommand(Configuration configuration, Class<?> mapperInterface, Method method) {
       final String methodName = method.getName();
       final Class<?> declaringClass = method.getDeclaringClass();
-      /**获取MappedStatement*/
+      //获取MappedStatement
       MappedStatement ms = resolveMappedStatement(mapperInterface, methodName, declaringClass,
           configuration);
       if (ms == null) {
@@ -290,7 +292,7 @@ public class MapperMethod {
     private MappedStatement resolveMappedStatement(Class<?> mapperInterface, String methodName,
         Class<?> declaringClass, Configuration configuration) {
       String statementId = mapperInterface.getName() + "." + methodName;
-      /**根据daoName.methodName 查找之前注册过的MappedStatement*/
+      //根据daoName.methodName 查找之前注册过的MappedStatement
       if (configuration.hasStatement(statementId)) {
         return configuration.getMappedStatement(statementId);
       } else if (mapperInterface.equals(declaringClass)) {
@@ -339,7 +341,7 @@ public class MapperMethod {
      * @param method 被代理方法
      */
     public MethodSignature(Configuration configuration, Class<?> mapperInterface, Method method) {
-      /**获取返回类型Type*/
+      //获取返回类型Type
       Type resolvedReturnType = TypeParameterResolver.resolveReturnType(method, mapperInterface);
       if (resolvedReturnType instanceof Class<?>) {
         this.returnType = (Class<?>) resolvedReturnType;
@@ -354,11 +356,11 @@ public class MapperMethod {
       this.returnsOptional = Optional.class.equals(this.returnType);
       this.mapKey = getMapKey(method);
       this.returnsMap = this.mapKey != null;
-      /**参数类型为RowBounds或其子类的下标*/
+      //参数类型为RowBounds或其子类的下标
       this.rowBoundsIndex = getUniqueParamIndex(method, RowBounds.class);
-      /**参数类型为ResultHandler或其子类的下标*/
+      //参数类型为ResultHandler或其子类的下标
       this.resultHandlerIndex = getUniqueParamIndex(method, ResultHandler.class);
-      /**参数名称解析器*/
+      //参数名称解析器
       this.paramNameResolver = new ParamNameResolver(configuration, method);
     }
 

@@ -24,7 +24,7 @@ import java.util.Map;
 public class LanguageDriverRegistry {
   /**语言驱动类和其实例的集合，一般有
    * XMLLanguageDriver
-   * XMLLanguageDriver
+   * RawLanguageDriver
    */
   private final Map<Class<? extends LanguageDriver>, LanguageDriver> LANGUAGE_DRIVER_MAP = new HashMap<>();
   /**默认的语言驱动类  XMLLanguageDriver*/

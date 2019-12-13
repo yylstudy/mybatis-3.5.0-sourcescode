@@ -67,7 +67,7 @@ public class XMLScriptBuilder extends BaseBuilder {
   }
 
   /**
-   * 解析动态标签
+   * 将标签解析成SqlSource
    * @return
    */
   public SqlSource parseScriptNode() {
@@ -76,7 +76,7 @@ public class XMLScriptBuilder extends BaseBuilder {
     MixedSqlNode rootSqlNode = parseDynamicTags(context);
     SqlSource sqlSource = null;
     if (isDynamic) {
-      //若是动态创建动态SqlSource(包含${})
+      //若是动态创建动态SqlSource(包含${})或者mybatis动态标签
       sqlSource = new DynamicSqlSource(configuration, rootSqlNode);
     } else {
       //否则创建原生SqlSource，这个也是装饰类，内有被装饰的sqlSource，是staticSqlSource
@@ -92,16 +92,16 @@ public class XMLScriptBuilder extends BaseBuilder {
    */
   protected MixedSqlNode parseDynamicTags(XNode node) {
     List<SqlNode> contents = new ArrayList<>();
-    /**获取所有子标签，一个标签一段，所以一个sql语句可能有多个标签，将多个标签的sql解析出来，再拼接上就是完整的sql语句了*/
+    //获取所有子标签，一个标签一段，所以一个sql语句可能有多个标签，将多个标签的sql解析出来，再拼接上就是完整的sql语句了
     NodeList children = node.getNode().getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
-      /**将node子节点转化为node的XNode子节点*/
+      //将node子节点转化为node的XNode子节点
       XNode child = node.newXNode(children.item(i));
       /**如果节点标签是<CDATASection >或者是文本*/
       if (child.getNode().getNodeType() == Node.CDATA_SECTION_NODE || child.getNode().getNodeType() == Node.TEXT_NODE) {
         String data = child.getStringBody("");
         TextSqlNode textSqlNode = new TextSqlNode(data);
-        /**若文本包含${}等，则是动态的sql，否则就是静态的sql*/
+        //若文本包含${}等，则是动态的sql，否则就是静态的sql
         if (textSqlNode.isDynamic()) {
           contents.add(textSqlNode);
           isDynamic = true;
@@ -116,7 +116,7 @@ public class XMLScriptBuilder extends BaseBuilder {
         if (handler == null) {
           throw new BuilderException("Unknown element <" + nodeName + "> in SQL statement.");
         }
-        /**将当前标签加入到contents中*/
+        //将当前标签加入到contents中
         handler.handleNode(child, contents);
         isDynamic = true;
       }

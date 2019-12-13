@@ -59,6 +59,9 @@ public class MapperBuilderAssistant extends BaseBuilder {
   private final String resource;
   /**当前mapper对象的缓存对象*/
   private Cache currentCache;
+  /**
+   * 是否存在不能解析的缓存ref
+   */
   private boolean unresolvedCacheRef; // issue #676
 
   public MapperBuilderAssistant(Configuration configuration, String resource) {
@@ -116,6 +119,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
     }
     try {
       unresolvedCacheRef = true;
+      //从配置中心中查找缓存实例，若未查找到哦，则抛出不能解析的缓存异常
       Cache cache = configuration.getCache(namespace);
       if (cache == null) {
         throw new IncompleteElementException("No cache for namespace '" + namespace + "' could be found.");
@@ -133,7 +137,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
    * @param typeClass 缓存类的Class
    * @param evictionClass 缓存回收策略的Class
    * @param flushInterval 刷新时间
-   * @param size 缓存存储对象
+   * @param size 缓存存储长度
    * @param readWrite 是否只读
    * @param blocking 是否阻塞
    * @param props cache下子标签的键值对
@@ -146,9 +150,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
       boolean readWrite,
       boolean blocking,
       Properties props) {
-    /**
-     * 建造者模式，构建Cache对象
-     */
+    //建造者模式，构建Cache对象
     Cache cache = new CacheBuilder(currentNamespace)
         .implementation(valueOrDefault(typeClass, PerpetualCache.class))
         .addDecorator(valueOrDefault(evictionClass, LruCache.class))
@@ -223,7 +225,8 @@ public class MapperBuilderAssistant extends BaseBuilder {
       }
       ResultMap resultMap = configuration.getResultMap(extend);
       List<ResultMapping> extendedResultMappings = new ArrayList<>(resultMap.getResultMappings());
-      //去除和继承的父类相同的ResultMappings
+      //去除和继承的父类相同的ResultMappings，可以查看ResultMapping的equals方法
+      //只是比较属性名相同，那么就是同一个，所以这里可以直接removeAll
       extendedResultMappings.removeAll(resultMappings);
       // Remove parent constructor if this resultMap declares a constructor.
       //<resultMap>标签是否存在<constructor>节点
@@ -478,7 +481,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
       String resultSet,
       String foreignColumn,
       boolean lazy) {
-    //根据返回类和属性名获取java类型
+    //在<result>标签未配置javaType的情况下，根据resultMap的返回类型推断其javaType
     Class<?> javaTypeClass = resolveResultJavaType(resultType, property, javaType);
     //获取typeHandler实例
     TypeHandler<?> typeHandlerInstance = resolveTypeHandler(javaTypeClass, typeHandler);

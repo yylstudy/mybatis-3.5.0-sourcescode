@@ -22,6 +22,9 @@ import java.lang.reflect.InvocationTargetException;
  * @author Clinton Begin
  */
 public class SetFieldInvoker implements Invoker {
+  /**
+   * Field对象
+   */
   private final Field field;
 
   public SetFieldInvoker(Field field) {

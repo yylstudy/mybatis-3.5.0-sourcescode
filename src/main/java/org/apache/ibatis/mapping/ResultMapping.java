@@ -47,7 +47,9 @@ public class ResultMapping {
    * 所有这个的在获取结果集的时候，肯定要判断这个，不为空时到缓存中获取这个对应的resultMap
    */
   private String nestedResultMapId;
-  //association、collection的select 元素的值，表示要执行的sql语句
+  /**
+   * association、collection的select 元素的值，表示要执行的sql语句
+   */
   private String nestedQueryId;
   private Set<String> notNullColumns;
   /**列名前缀*/
@@ -169,11 +171,11 @@ public class ResultMapping {
      * 校验resultMapping的一些属性
      */
     private void validate() {
-      // Issue #697: cannot define both nestedQueryId and nestedResultMapId
+      // nestedQueryId和nestedResultMapId只能出现一个
       if (resultMapping.nestedQueryId != null && resultMapping.nestedResultMapId != null) {
         throw new IllegalStateException("Cannot define both nestedQueryId and nestedResultMapId in property " + resultMapping.property);
       }
-      // Issue #5: there should be no mappings without typehandler
+      // 如果不是嵌套查询，必须要有TypeHandler， 最常用的如 StringTypeHandler
       if (resultMapping.nestedQueryId == null && resultMapping.nestedResultMapId == null && resultMapping.typeHandler == null) {
         throw new IllegalStateException("No typehandler found for property " + resultMapping.property);
       }

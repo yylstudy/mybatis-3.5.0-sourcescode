@@ -83,7 +83,7 @@ public class UnpooledDataSourceFactory implements DataSourceFactory {
    */
   private Object convertValue(MetaObject metaDataSource, String propertyName, String value) {
     Object convertedValue = value;
-    //获取该属性的参数类型
+    //获取set方法的类型
     Class<?> targetType = metaDataSource.getSetterType(propertyName);
     if (targetType == Integer.class || targetType == int.class) {
       convertedValue = Integer.valueOf(value);

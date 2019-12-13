@@ -22,18 +22,34 @@ import java.util.List;
  * @author Clinton Begin
  */
 public class PoolState {
-
+  /**
+   * 数据源对象
+   */
   protected PooledDataSource dataSource;
-
+  /**
+   * 空闲的链接对象
+   */
   protected final List<PooledConnection> idleConnections = new ArrayList<>();
+  /**
+   * 活动的链接对象
+   */
   protected final List<PooledConnection> activeConnections = new ArrayList<>();
   protected long requestCount = 0;
   protected long accumulatedRequestTime = 0;
   protected long accumulatedCheckoutTime = 0;
+  /**
+   * 已过期的数据库连接计数
+   */
   protected long claimedOverdueConnectionCount = 0;
+  /**
+   * 过期时间的累计签出时间
+   */
   protected long accumulatedCheckoutTimeOfOverdueConnections = 0;
   protected long accumulatedWaitTime = 0;
   protected long hadToWaitCount = 0;
+  /**
+   * 无法使用的数据库连接计数器  connection.isClosed()为true
+   */
   protected long badConnectionCount = 0;
 
   public PoolState(PooledDataSource dataSource) {

@@ -74,7 +74,7 @@ public class XNode {
   }
 
   /**
-   * 获取<association><collection>的id值，大概格式就是
+   * 获取<resultMap><association><collection>的id值，大概格式就是
    * 标签名+[_resultMapId_[_collection[propertyName]]]
    * @return
    */

@@ -151,6 +151,10 @@ public class TypeAliasRegistry {
     }
   }
 
+  /**
+   * 注册别名
+   * @param type
+   */
   public void registerAlias(Class<?> type) {
     /**获取类的简单名字*/
     String alias = type.getSimpleName();
@@ -161,7 +165,12 @@ public class TypeAliasRegistry {
     } 
     registerAlias(alias, type);
   }
-  //注册别名和Class类型
+
+  /**
+   * 注册别名和Class类型
+   * @param alias
+   * @param value
+   */
   public void registerAlias(String alias, Class<?> value) {
     if (alias == null) {
       throw new TypeException("The parameter alias cannot be null");

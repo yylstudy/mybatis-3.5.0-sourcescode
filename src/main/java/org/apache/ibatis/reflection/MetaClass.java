@@ -70,6 +70,11 @@ public class MetaClass {
     return reflector.getSetablePropertyNames();
   }
 
+  /**
+   * 获取set方法的类型
+   * @param name
+   * @return
+   */
   public Class<?> getSetterType(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {
@@ -172,6 +177,11 @@ public class MetaClass {
     }
   }
 
+  /**
+   * 获取get方法的执行器
+   * @param name
+   * @return
+   */
   public Invoker getGetInvoker(String name) {
     return reflector.getGetInvoker(name);
   }

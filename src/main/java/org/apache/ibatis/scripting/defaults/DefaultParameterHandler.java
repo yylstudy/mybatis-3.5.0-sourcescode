@@ -45,7 +45,8 @@ public class DefaultParameterHandler implements ParameterHandler {
   private final TypeHandlerRegistry typeHandlerRegistry;
   /**mappedStatement*/
   private final MappedStatement mappedStatement;
-  /**参数名和值得键值对，也有可能是参数本身*/
+  /**参数名和参数值的映射关系，Map<String,Object>，
+   * 若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身*/
   private final Object parameterObject;
   /**要执行的sql对象*/
   private final BoundSql boundSql;
@@ -77,7 +78,7 @@ public class DefaultParameterHandler implements ParameterHandler {
         ParameterMapping parameterMapping = parameterMappings.get(i);
         if (parameterMapping.getMode() != ParameterMode.OUT) {
           Object value;
-          /**获取要注入参数的key*/
+          //获取要注入参数的key
           String propertyName = parameterMapping.getProperty();
           if (boundSql.hasAdditionalParameter(propertyName)) {
             value = boundSql.getAdditionalParameter(propertyName);
@@ -89,9 +90,9 @@ public class DefaultParameterHandler implements ParameterHandler {
           else if (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) {
             value = parameterObject;
           } else {
-            /**获取参数对象的MetaObject*/
+            //获取参数对象的MetaObject
             MetaObject metaObject = configuration.newMetaObject(parameterObject);
-            /**根据参数键值对的Map获取其值*/
+            //根据参数键值对的Map获取其值
             value = metaObject.getValue(propertyName);
           }
           TypeHandler typeHandler = parameterMapping.getTypeHandler();

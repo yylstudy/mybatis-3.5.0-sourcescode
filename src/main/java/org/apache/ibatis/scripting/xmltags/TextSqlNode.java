@@ -27,7 +27,8 @@ import org.apache.ibatis.type.SimpleTypeRegistry;
  * 动态的文本sql，其中包含${}
  */
 public class TextSqlNode implements SqlNode {
-  /**部分文本sql*/
+  /**部分文本sql  select id,cnname,sex from ${tableName} where id=#{studentId}
+   */
   private final String text;
   private final Pattern injectionFilter;
 
@@ -45,6 +46,19 @@ public class TextSqlNode implements SqlNode {
   }
 
   /**
+   * 解析动态sql，${}这个的解析就是在这里完成的
+   * @param context
+   * @return
+   */
+  @Override
+  public boolean apply(DynamicContext context) {
+    GenericTokenParser parser = createParser(new BindingTokenParser(context, injectionFilter));
+
+    context.appendSql(parser.parse(text));
+    return true;
+  }
+
+  /**
    * TextSqlNode是否是动态的
    * @return
    */
@@ -57,20 +71,14 @@ public class TextSqlNode implements SqlNode {
     return checker.isDynamic();
   }
 
-  @Override
-  public boolean apply(DynamicContext context) {
-    GenericTokenParser parser = createParser(new BindingTokenParser(context, injectionFilter));
-
-    context.appendSql(parser.parse(text));
-    return true;
-  }
-  
   private GenericTokenParser createParser(TokenHandler handler) {
     return new GenericTokenParser("${", "}", handler);
   }
 
   private static class BindingTokenParser implements TokenHandler {
-
+    /**
+     * 动态上下文
+     */
     private DynamicContext context;
     private Pattern injectionFilter;
 
@@ -79,14 +87,22 @@ public class TextSqlNode implements SqlNode {
       this.injectionFilter = injectionFilter;
     }
 
+    /**
+     * ${}符号解析器
+     * @param content
+     * @return
+     */
     @Override
     public String handleToken(String content) {
+      //获取参数  参数名和参数值的映射关系，Map<String,Object>，@Param注解，那么这个parameter就是第一个参数本身
       Object parameter = context.getBindings().get("_parameter");
       if (parameter == null) {
         context.getBindings().put("value", null);
       } else if (SimpleTypeRegistry.isSimpleType(parameter.getClass())) {
+        //是简单类型的数据，直接将值添加到 key为“value”的映射上
         context.getBindings().put("value", parameter);
       }
+      //根据参数对象，获取${}表达式内的值
       Object value = OgnlCache.getValue(content, context.getBindings());
       String srtValue = (value == null ? "" : String.valueOf(value)); // issue #274 return "" instead of "null"
       checkInjection(srtValue);

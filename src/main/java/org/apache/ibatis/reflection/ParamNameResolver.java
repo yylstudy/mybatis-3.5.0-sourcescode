@@ -140,11 +140,11 @@ public class ParamNameResolver {
    */
   public Object getNamedParams(Object[] args) {
     final int paramCount = names.size();
-    /**参数为空，或者之前解析参数名称长度为0直接返回*/
+    //参数为空，或者之前解析参数名称长度为0直接返回
     if (args == null || paramCount == 0) {
       return null;
-      /**参数不存在@Param注解，并且参数个数为1*/
     } else if (!hasParamAnnotation && paramCount == 1) {
+      //参数不存在@Param注解，并且参数个数为1
       return args[names.firstKey()];
     } else {
       /**参数名称和参数值的集合*/

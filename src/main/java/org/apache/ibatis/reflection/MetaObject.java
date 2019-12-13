@@ -48,23 +48,30 @@ public class MetaObject {
     this.objectFactory = objectFactory;
     this.objectWrapperFactory = objectWrapperFactory;
     this.reflectorFactory = reflectorFactory;
-
+    //当前对象已经是ObjectWrapper了，那么objectWrapper直接等于当期对象
     if (object instanceof ObjectWrapper) {
       this.objectWrapper = (ObjectWrapper) object;
-    } else if (objectWrapperFactory.hasWrapperFor(object)) {
+    }
+    //DefaultObjectWrapperFactory的hasWrapperFor为false，这个应该是让程序可拓展的
+    else if (objectWrapperFactory.hasWrapperFor(object)) {
       this.objectWrapper = objectWrapperFactory.getWrapperFor(this, object);
-    } else if (object instanceof Map) {
+    }
+    //原对象是Map
+    else if (object instanceof Map) {
       this.objectWrapper = new MapWrapper(this, (Map) object);
-    } else if (object instanceof Collection) {
+    }
+    //如果是集合的话
+    else if (object instanceof Collection) {
       this.objectWrapper = new CollectionWrapper(this, (Collection) object);
     } else {
+      //普通的Object
       this.objectWrapper = new BeanWrapper(this, object);
     }
   }
 
   /**
    * 创建一个MetaObject对象
-   * @param object dataSource
+   * @param object 源对象
    * @param objectFactory objectFactory
    * @param objectWrapperFactory
    * @param reflectorFactory 反射器工厂
@@ -106,6 +113,11 @@ public class MetaObject {
     return objectWrapper.getSetterNames();
   }
 
+  /**
+   * 获取set方法的类型
+   * @param name
+   * @return
+   */
   public Class<?> getSetterType(String name) {
     return objectWrapper.getSetterType(name);
   }
@@ -122,6 +134,11 @@ public class MetaObject {
     return objectWrapper.hasGetter(name);
   }
 
+  /**
+   * 获取值
+   * @param name
+   * @return
+   */
   public Object getValue(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {
@@ -132,6 +149,7 @@ public class MetaObject {
         return metaValue.getValue(prop.getChildren());
       }
     } else {
+      //获取值
       return objectWrapper.get(prop);
     }
   }
@@ -156,13 +174,20 @@ public class MetaObject {
       }
       metaValue.setValue(prop.getChildren(), value);
     } else {
-      /**不存在.，也就是这是个单一属性*/
+      //不存在.，也就是这是个单一属性
       objectWrapper.set(prop, value);
     }
   }
 
+  /**
+   * 获取当前MetaObject对应属性的MetaObject
+   * @param name
+   * @return
+   */
   public MetaObject metaObjectForProperty(String name) {
+    //获取属性的值，
     Object value = getValue(name);
+    //根据这个值生成MetaObject
     return MetaObject.forObject(value, objectFactory, objectWrapperFactory, reflectorFactory);
   }
 

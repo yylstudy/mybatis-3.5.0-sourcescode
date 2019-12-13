@@ -25,19 +25,33 @@ import org.apache.ibatis.mapping.ResultMapping;
  * @author Eduardo Macarron
  */
 public class ResultMapResolver {
-  /**mapper构建器助手*/
+  /**
+   * mapper构建器助手
+   */
   private final MapperBuilderAssistant assistant;
-  /**resultMap的名称*/
+  /**
+   * resultMap的名称
+   */
   private final String id;
-  /**resultMap的java类型*/
+  /**
+   * resultMap的java类型
+   */
   private final Class<?> type;
-  /**继承的resultMap*/
+  /**
+   * 继承的resultMap
+   */
   private final String extend;
-  //resultMap下子标签discriminator
+  /**
+   * resultMap下子标签discriminator
+   */
   private final Discriminator discriminator;
-  /**存放解析完成的ResultMap下的非 discriminator和constructor属性*/
+  /**
+   * 存放解析完成的ResultMap下的非 discriminator和constructor属性
+   */
   private final List<ResultMapping> resultMappings;
-  /**是否自动映射*/
+  /**
+   * 是否自动映射
+   */
   private final Boolean autoMapping;
 
   public ResultMapResolver(MapperBuilderAssistant assistant, String id, Class<?> type, String extend, Discriminator discriminator, List<ResultMapping> resultMappings, Boolean autoMapping) {

@@ -23,11 +23,11 @@ import org.apache.ibatis.cache.Cache;
 
 /**
  * Lru (least recently used) cache decorator
- *
+ * mybatis lru策略默认实现
  * @author Clinton Begin
  */
 public class LruCache implements Cache {
-  /**缓存类*/
+  /**被装饰缓存类*/
   private final Cache delegate;
   /**缓存键集合*/
   private Map<Object, Object> keyMap;
@@ -54,7 +54,9 @@ public class LruCache implements Cache {
   }
 
   public void setSize(final int size) {
-    //创建一个有序的hashMap，匿名内部类
+    //使用LinkedHashMap来实现Lru，主要思想是put的时候判断长度是否超过限制，如果超过限制
+    //那么推入当前元素到链表尾部，并且删除头元素，并且在get的时候，也要将访问到的元素
+    //从当前位置断开，插入到末尾，这样就实现了lru
     keyMap = new LinkedHashMap<Object, Object>(size, .75F, true) {
       private static final long serialVersionUID = 4267176411845948333L;
 
@@ -67,7 +69,7 @@ public class LruCache implements Cache {
       @Override
       protected boolean removeEldestEntry(Map.Entry<Object, Object> eldest) {
         boolean tooBig = size() > size;
-        /**若是当前LinkedHashMap中的键值对大于缓存允许的最大长度，那么就将第一个键值对删除*/
+        //若是当前LinkedHashMap中的键值对大于缓存允许的最大长度，那么就将第一个键值对删除
         if (tooBig) {
           /**将要删除的key赋值*/
           eldestKey = eldest.getKey();
@@ -90,8 +92,14 @@ public class LruCache implements Cache {
     cycleKeyList(key);
   }
 
+  /**
+   * 获取缓存中的实例
+   * @param key The key
+   * @return
+   */
   @Override
   public Object getObject(Object key) {
+    //get一下，将当前的key重置到LinkedHashMap链表的末尾
     keyMap.get(key); //touch
     return delegate.getObject(key);
   }

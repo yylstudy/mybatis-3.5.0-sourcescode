@@ -28,9 +28,16 @@ import org.apache.ibatis.reflection.property.PropertyTokenizer;
  * @author Clinton Begin
  */
 public class MapWrapper extends BaseWrapper {
-  //这个好像是双重Map
+  /**
+   * 目标
+   */
   private final Map<String, Object> map;
 
+  /**
+   * 创建MapWrapper
+   * @param metaObject
+   * @param map
+   */
   public MapWrapper(MetaObject metaObject, Map<String, Object> map) {
     super(metaObject);
     this.map = map;

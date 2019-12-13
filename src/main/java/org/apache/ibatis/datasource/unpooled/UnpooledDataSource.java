@@ -38,18 +38,30 @@ import org.apache.ibatis.io.Resources;
 public class UnpooledDataSource implements DataSource {
   
   private ClassLoader driverClassLoader;
-  //<datasource>标签下的property配置文件
+  /**
+   * <datasource>标签下的property配置文件
+   */
   private Properties driverProperties;
   private static Map<String, Driver> registeredDrivers = new ConcurrentHashMap<>();
-  //驱动
+  /**
+   * 驱动
+   */
   private String driver;
-  //url
+  /**
+   * url
+   */
   private String url;
-  //数据库用户名
+  /**
+   * 数据库用户名
+   */
   private String username;
-  //数据库密码
+  /**
+   * 数据库密码
+   */
   private String password;
-
+  /**
+   * 是否自动提交
+   */
   private Boolean autoCommit;
   private Integer defaultTransactionIsolationLevel;
 
@@ -92,6 +104,11 @@ public class UnpooledDataSource implements DataSource {
     this.driverProperties = driverProperties;
   }
 
+  /**
+   * 获取数据库连接
+   * @return
+   * @throws SQLException
+   */
   @Override
   public Connection getConnection() throws SQLException {
     return doGetConnection(username, password);
@@ -186,6 +203,13 @@ public class UnpooledDataSource implements DataSource {
     this.defaultTransactionIsolationLevel = defaultTransactionIsolationLevel;
   }
 
+  /**
+   * 获取数据库连接
+   * @param username
+   * @param password
+   * @return
+   * @throws SQLException
+   */
   private Connection doGetConnection(String username, String password) throws SQLException {
     Properties props = new Properties();
     if (driverProperties != null) {
@@ -200,9 +224,18 @@ public class UnpooledDataSource implements DataSource {
     return doGetConnection(props);
   }
 
+  /**
+   * 获取数据库连接
+   * @param properties
+   * @return
+   * @throws SQLException
+   */
   private Connection doGetConnection(Properties properties) throws SQLException {
+    //初始化驱动
     initializeDriver();
+    //创建Connection
     Connection connection = DriverManager.getConnection(url, properties);
+    //配置连接
     configureConnection(connection);
     return connection;
   }
@@ -227,10 +260,17 @@ public class UnpooledDataSource implements DataSource {
     }
   }
 
+  /**
+   * 配置连接
+   * @param conn
+   * @throws SQLException
+   */
   private void configureConnection(Connection conn) throws SQLException {
+    //设置是否自动提交
     if (autoCommit != null && autoCommit != conn.getAutoCommit()) {
       conn.setAutoCommit(autoCommit);
     }
+    //设置事务隔离级别
     if (defaultTransactionIsolationLevel != null) {
       conn.setTransactionIsolation(defaultTransactionIsolationLevel);
     }

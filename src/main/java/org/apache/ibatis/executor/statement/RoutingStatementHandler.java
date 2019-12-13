@@ -37,7 +37,9 @@ import org.apache.ibatis.session.RowBounds;
  * RoutingStatementHandler，真正StatementHandler对象的装饰对象
  */
 public class RoutingStatementHandler implements StatementHandler {
-
+  /**
+   * 被装饰的StatementHandler对象，PreparedStatementHandler
+   */
   private final StatementHandler delegate;
 
   /**

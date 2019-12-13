@@ -61,7 +61,7 @@ public class SqlSourceBuilder extends BaseBuilder {
     private List<ParameterMapping> parameterMappings = new ArrayList<>();
     /**参数类型（xml中定义的parameterType的类型，缺省为Object）*/
     private Class<?> parameterType;
-    /**参数类的MetaObjecy*/
+    /**Map<String, Object>的MetaObject*/
     private MetaObject metaParameters;
 
     public ParameterMappingTokenHandler(Configuration configuration, Class<?> parameterType, Map<String, Object> additionalParameters) {

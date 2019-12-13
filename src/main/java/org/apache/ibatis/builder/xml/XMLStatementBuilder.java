@@ -41,6 +41,9 @@ public class XMLStatementBuilder extends BaseBuilder {
   private final MapperBuilderAssistant builderAssistant;
   /**select、insert、update、delete标签*/
   private final XNode context;
+  /**
+   * configuration中配置的databaseId
+   */
   private final String requiredDatabaseId;
 
   public XMLStatementBuilder(Configuration configuration, MapperBuilderAssistant builderAssistant, XNode context) {

@@ -48,7 +48,7 @@ public class CacheBuilder {
   private Integer size;
   /**缓存刷新时间*/
   private Long clearInterval;
-  /**是否能读写*/
+  /**是否能读写 这里的读写是指是否可序列化*/
   private boolean readWrite;
   /**cache下子标签的键值对*/
   private Properties properties;
@@ -96,7 +96,11 @@ public class CacheBuilder {
     this.properties = properties;
     return this;
   }
-  //创建真正的缓存对象
+
+  /**
+   * 创建真正的缓存对象
+   * @return
+   */
   public Cache build() {
     //设置缓存的实现类以及回收策略类
     setDefaultImplementations();
@@ -108,14 +112,11 @@ public class CacheBuilder {
     //如果缓存的实现类是PerpetualCache，也就是默认缓存实现类
     if (PerpetualCache.class.equals(cache.getClass())) {
       for (Class<? extends Cache> decorator : decorators) {
-        /**
-         * 遍历装饰类，构造出装饰类实例，遍历完成后，cache就是最外层的装饰对象，最里层装饰对象就是
-         * 真正的缓存类
-         */
+        //遍历装饰类，构造出装饰类实例，遍历完成后，cache就是最外层的装饰对象，最里层装饰对象就是正的缓存类
         cache = newCacheDecoratorInstance(decorator, cache);
         setCacheProperties(cache);
       }
-      /**设置通用的装饰器*/
+      //设置通用的装饰器
       cache = setStandardDecorators(cache);
       //若自定义的缓存类不是LoggingCache的子类，那么创建一个LoggingCache装饰类，用于统计缓存的命中率
     } else if (!LoggingCache.class.isAssignableFrom(cache.getClass())) {

@@ -334,10 +334,11 @@ public final class TypeHandlerRegistry {
         mappedTypeFound = true;
       }
     }
-    // @since 3.1.0 - try to auto-discover the mapped type
+    // 尝试自动发现TypeHandler的JavaType，自定义的TypeHandler基本都继承于BaseTypeHandler
     if (!mappedTypeFound && typeHandler instanceof TypeReference) {
       try {
         TypeReference<T> typeReference = (TypeReference<T>) typeHandler;
+        //typeReference.getRawType() 这个是在TypeHandler的空构造中实现的
         register(typeReference.getRawType(), typeHandler);
         mappedTypeFound = true;
       } catch (Throwable t) {
@@ -460,13 +461,13 @@ public final class TypeHandlerRegistry {
   }
 
   /**
-   * 获取实例，这里不会报错吗，自定义的typeHandler并没有String的构造参数？？？？？？？？？？？？？？
-   * 这是因为会抛出异常，因为没有string的构造参数，1抛出异常被NoSuchMethodException 捕获
-   * 不处理，继续向下运行，创建无参构造
+   * 获取TypeHandler实例
    */
   public <T> TypeHandler<T> getInstance(Class<?> javaTypeClass, Class<?> typeHandlerClass) {
     if (javaTypeClass != null) {
       try {
+        //这个主要是针对继承EnumTypeHandler的自定义枚举TypeHandler使用的构造器
+        //但是这样的话就必须定义JavaType，否则使用无参构造
         Constructor<?> c = typeHandlerClass.getConstructor(Class.class);//1
         return (TypeHandler<T>) c.newInstance(javaTypeClass);//2
       } catch (NoSuchMethodException ignored) {

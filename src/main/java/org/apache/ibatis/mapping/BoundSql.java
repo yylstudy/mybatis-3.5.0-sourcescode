@@ -42,7 +42,7 @@ public class BoundSql {
   private final Object parameterObject;
   /**默认是空的参数构造*/
   private final Map<String, Object> additionalParameters;
-  /**ContextMap对象的MetaObject对象，方便设置参数值和获取值，是个双重Map结构*/
+  /**Map的MetaObject*/
   private final MetaObject metaParameters;
 
   public BoundSql(Configuration configuration, String sql, List<ParameterMapping> parameterMappings, Object parameterObject) {

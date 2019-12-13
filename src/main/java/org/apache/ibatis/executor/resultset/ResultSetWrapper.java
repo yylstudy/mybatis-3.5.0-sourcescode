@@ -44,16 +44,16 @@ public class ResultSetWrapper {
   private final ResultSet resultSet;
   /**typeHandler注册器*/
   private final TypeHandlerRegistry typeHandlerRegistry;
-  /**resultSet解析出来的列名集合*/
+  /**resultSet解析出来的列名（如果存在别名，则使用别名）集合*/
   private final List<String> columnNames = new ArrayList<>();
-  /**列Class集合*/
+  /**查询列字段的class类型字符串*/
   private final List<String> classNames = new ArrayList<>();
-  /**jdbc类型*/
+  /**sql语句中字段的JdbcType*/
   private final List<JdbcType> jdbcTypes = new ArrayList<>();
   private final Map<String, Map<Class<?>, TypeHandler<?>>> typeHandlerMap = new HashMap<>();
-  /**存放<resultMap>中列名能和resultSet对应上的字段    映射关系是 resultMapId ->> 能对应上的列名集合*/
+  /**存放<resultMap>中列名能和resultSet对应上的字段 列名大写    映射关系是 resultMapId ->> 能对应上的列名集合*/
   private final Map<String, List<String>> mappedColumnNamesMap = new HashMap<>();
-  /**存放<resultMap>中列名不能和resultSet对应上的字段    映射关系是 resultMapId ->> 不能对应上的列名集合*/
+  /**存放<resultMap>中列名不能和resultSet对应上的字段 还是原来的列名   映射关系是 resultMapId ->> 不能对应上的列名集合*/
   private final Map<String, List<String>> unMappedColumnNamesMap = new HashMap<>();
 
   /**
@@ -67,10 +67,10 @@ public class ResultSetWrapper {
     this.typeHandlerRegistry = configuration.getTypeHandlerRegistry();
     this.resultSet = rs;
     final ResultSetMetaData metaData = rs.getMetaData();
-    //resultSet的列数
+    //查询语句列的数量
     final int columnCount = metaData.getColumnCount();
     for (int i = 1; i <= columnCount; i++) {
-      //列名
+      //获取列别名
       columnNames.add(configuration.isUseColumnLabel() ? metaData.getColumnLabel(i) : metaData.getColumnName(i));
       //metaData.getColumnType(i)表示返回此列的sql数据类型
       jdbcTypes.add(JdbcType.forCode(metaData.getColumnType(i)));
@@ -194,9 +194,17 @@ public class ResultSetWrapper {
     return mappedColumnNames;
   }
 
+  /**
+   * 获取 ResultSet对象中和<ResultMap>定义的字段的字段匹配不上的列明
+   * @param resultMap
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   public List<String> getUnmappedColumnNames(ResultMap resultMap, String columnPrefix) throws SQLException {
     List<String> unMappedColumnNames = unMappedColumnNamesMap.get(getMapKey(resultMap, columnPrefix));
     if (unMappedColumnNames == null) {
+      //加载列名的映射关系
       loadMappedAndUnmappedColumnNames(resultMap, columnPrefix);
       unMappedColumnNames = unMappedColumnNamesMap.get(getMapKey(resultMap, columnPrefix));
     }

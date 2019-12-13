@@ -83,6 +83,7 @@ public class TypeParameterResolver {
     if (type instanceof TypeVariable) {
       return resolveTypeVar((TypeVariable<?>) type, srcType, declaringClass);
     } else if (type instanceof ParameterizedType) {
+      //解析ParameterizedType
       return resolveParameterizedType((ParameterizedType) type, srcType, declaringClass);
       //表示元素类型是参数化类型或者类型变量的数组类型
     } else if (type instanceof GenericArrayType) {
@@ -109,10 +110,17 @@ public class TypeParameterResolver {
     }
   }
 
+  /**
+   * 解析ParameterizedType
+   * @param parameterizedType
+   * @param srcType
+   * @param declaringClass
+   * @return
+   */
   private static ParameterizedType resolveParameterizedType(ParameterizedType parameterizedType, Type srcType, Class<?> declaringClass) {
     //type的原始类型
     Class<?> rawType = (Class<?>) parameterizedType.getRawType();
-    //
+    //获取泛型类型
     Type[] typeArgs = parameterizedType.getActualTypeArguments();
     Type[] args = new Type[typeArgs.length];
     for (int i = 0; i < typeArgs.length; i++) {
@@ -237,10 +245,15 @@ public class TypeParameterResolver {
   }
 
   static class ParameterizedTypeImpl implements ParameterizedType {
+    /**
+     * 参数原类型 如Map<String,String> 这个就是Map
+     */
     private Class<?> rawType;
 
     private Type ownerType;
-
+    /**
+     * 泛型类型数组 如Map<String,String> String数组
+     */
     private Type[] actualTypeArguments;
 
     public ParameterizedTypeImpl(Class<?> rawType, Type ownerType, Type[] actualTypeArguments) {

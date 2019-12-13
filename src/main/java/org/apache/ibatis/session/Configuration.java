@@ -116,6 +116,7 @@ public class Configuration {
   //指定当结果集中值为null的时候，是否调用映射对象的setter方法，默认值是false
   protected boolean callSettersOnNulls;
   protected boolean useActualParamName = true;
+  //返回的结果实例允许空的行
   protected boolean returnInstanceForEmptyRow;
   //指定mybatis增加到日志名称的前缀
   protected String logPrefix;
@@ -182,7 +183,7 @@ public class Configuration {
    * 中包含很多信息，例如缓存对象实例，要执行的SqlSource等
    */
   protected final Map<String, MappedStatement> mappedStatements = new StrictMap<>("Mapped Statements collection");
-  /**存放缓存对象，key是dao的类名，值是具体的缓存类（被装饰的类）*/
+  /**二级缓存*/
   protected final Map<String, Cache> caches = new StrictMap<>("Caches collection");
   /**
    * 存放所有的resultMap id和ResultMap的映射关系
@@ -603,7 +604,8 @@ public class Configuration {
   /**
    * 创建sqlSession 下的四大对象之一，parameterHandler，用于处理参数
    * @param mappedStatement
-   * @param parameterObject  参数名和参数值的映射关系，Map<String,Object>
+   * @param parameterObject  参数名和参数值的映射关系，Map<String,Object>，
+   *   若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身
    * @param boundSql
    * @return
    */
@@ -644,9 +646,9 @@ public class Configuration {
    * @return
    */
   public StatementHandler newStatementHandler(Executor executor,MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
-    /**构建一个RoutingStatementHandler 这是真正的StatementHandler的装饰类*/
+    //构建一个RoutingStatementHandler 这是真正的StatementHandler的装饰类
     StatementHandler statementHandler = new RoutingStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
-    /**判断是否执行拦截器，是否需要进行代理*/
+    //判断是否执行拦截器，是否需要进行代理
     statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);
     return statementHandler;
   }
@@ -670,15 +672,15 @@ public class Configuration {
     } else if (ExecutorType.REUSE == executorType) {
       executor = new ReuseExecutor(this, transaction);
     } else {
-      /**创建一个SIMPLE的执行器*/
+      //创建一个SIMPLE的执行器
       executor = new SimpleExecutor(this, transaction);
     }
-    /**若是开启缓存*/
+    //若是开启缓存
     if (cacheEnabled) {
-      /**缓存执行器装饰类*/
+      //缓存执行器装饰类
       executor = new CachingExecutor(executor);
     }
-    //判断是否存在作用于Executor的拦截器
+    //判断是否存在作用于Executor的拦截器，如果存在，则返回其动态代理的对象
     executor = (Executor) interceptorChain.pluginAll(executor);
     return executor;
   }

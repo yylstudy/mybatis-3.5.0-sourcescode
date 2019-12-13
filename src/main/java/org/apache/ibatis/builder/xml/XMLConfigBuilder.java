@@ -142,7 +142,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       environmentsElement(root.evalNode("environments"));
       //解析databaseIdProvider，可以根据这个由不同的数据库执行不同的语句
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
-      //解析typeHandler属性
+      //解析全局typeHandler属性
       typeHandlerElement(root.evalNode("typeHandlers"));
       //解析mappers属性
       mapperElement(root.evalNode("mappers"));
@@ -403,9 +403,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       String type = context.getStringAttribute("type");
       //获取所有子属性值
       Properties props = context.getChildrenAsProperties();
-      /**
-       * 从别名注册器中获取对应type的TransactionFactory,比如：JDBC->JdbcTransactionFactory
-       */
+      //从别名注册器中获取对应type的TransactionFactory,比如：JDBC->JdbcTransactionFactory
       TransactionFactory factory = (TransactionFactory) resolveClass(type).newInstance();
       factory.setProperties(props);
       return factory;
@@ -421,6 +419,7 @@ public class XMLConfigBuilder extends BaseBuilder {
    */
   private DataSourceFactory dataSourceElement(XNode context) throws Exception {
     if (context != null) {
+      //获取数据源的类型，常用的有POOL，也就是连接池
       String type = context.getStringAttribute("type");
       Properties props = context.getChildrenAsProperties();
       /**
@@ -439,7 +438,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   /**
-   * 解析typeHandlers属性
+   * 解析全局typeHandlers属性
    * @param parent typeHandlers
    * @throws Exception
    */

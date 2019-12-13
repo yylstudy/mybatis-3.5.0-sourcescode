@@ -114,7 +114,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       /**解析mapper元素*/
       configurationElement(parser.evalNode("/mapper"));
       configuration.addLoadedResource(resource);
-      /**根据namespace构建Mapper*/
+      //根据namespace构建Mapper
       bindMapperForNamespace();
     }
     /**解析之前因异常解析未完成的ResultMap*/
@@ -181,7 +181,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       //构建XMLStatementBuilder
       final XMLStatementBuilder statementParser = new XMLStatementBuilder(configuration, builderAssistant, context, requiredDatabaseId);
       try {
-        /**解析语句成MappedStatement,MappedStatement就是语句在mybatis中的表现形式，并加入到缓存中*/
+        //解析语句成MappedStatement,MappedStatement就是语句在mybatis中的表现形式，并加入到缓存中
         statementParser.parseStatementNode();
       } catch (IncompleteElementException e) {
         configuration.addIncompleteStatement(statementParser);
@@ -344,13 +344,14 @@ public class XMLMapperBuilder extends BaseBuilder {
     String id = resultMapNode.getStringAttribute("id",
         resultMapNode.getValueBasedIdentifier());
     //获取type值，如果是<collection>标签，那么就是获取ofType，如果是<association>
-    // 标签，那么就是javaType
+    // 标签，那么就是javaType,<resultMap>就是type
     String type = resultMapNode.getStringAttribute("type",
         resultMapNode.getStringAttribute("ofType",
             resultMapNode.getStringAttribute("resultType",
                 resultMapNode.getStringAttribute("javaType"))));
     //获取继承的resultMap
     String extend = resultMapNode.getStringAttribute("extends");
+    //是否自动映射
     Boolean autoMapping = resultMapNode.getBooleanAttribute("autoMapping");
     //获取type对应的Class
     Class<?> typeClass = resolveClass(type);
@@ -553,6 +554,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       try {
         boundType = Resources.classForName(namespace);
       } catch (ClassNotFoundException e) {
+        //可以看到mapper文件，可以不存在对应的dao
         //ignore, bound type is not required
       }
       if (boundType != null) {
@@ -562,7 +564,7 @@ public class XMLMapperBuilder extends BaseBuilder {
           // to prevent loading again this resource from the mapper interface
           // look at MapperAnnotationBuilder#loadXmlResource
           configuration.addLoadedResource("namespace:" + namespace);
-          /**向Configuration中注册这个dao*/
+          //向Configuration中注册这个dao
           configuration.addMapper(boundType);
         }
       }

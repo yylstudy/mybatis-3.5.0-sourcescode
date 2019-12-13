@@ -50,7 +50,10 @@ public final class MappedStatement {
   /**构建StatementHandler将要选择的类型，默认是PREPARED*/
   private StatementType statementType;
   private ResultSetType resultSetType;
-  /**source对象，其中包含了sql的Node对象，可以根据getBoundSql获取要执行的sql语句*/
+  /**
+   * source对象，其中包含了sql的Node对象，可以根据getBoundSql获取要执行的sql语句
+   * 常用的有DynamicSqlSource 和StaticSqlSource
+   */
   private SqlSource sqlSource;
   /**当前整个Mapper的缓存对象，这个是二级缓存*/
   private Cache cache;
@@ -319,11 +322,11 @@ public final class MappedStatement {
    * @return
    */
   public BoundSql getBoundSql(Object parameterObject) {
-    /**获取BoundSql对象*/
+    //获取BoundSql对象
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
-    /**如果parameterType为空，就从parameterMap中加载*/
     if (parameterMappings == null || parameterMappings.isEmpty()) {
+      //如果parameterType为空，就从parameterMap中加载，一般走不到这里，一般来说在上面解析获取了
       boundSql = new BoundSql(configuration, boundSql.getSql(), parameterMap.getParameterMappings(), parameterObject);
     }
 

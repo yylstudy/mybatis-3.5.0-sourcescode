@@ -55,8 +55,14 @@ public class ScheduledCache implements Cache {
     return delegate.getSize();
   }
 
+  /**
+   * 插入缓存
+   * @param key
+   * @param object
+   */
   @Override
   public void putObject(Object key, Object object) {
+    //如果过期则清空缓存
     clearWhenStale();
     delegate.putObject(key, object);
   }
@@ -93,6 +99,10 @@ public class ScheduledCache implements Cache {
     return delegate.equals(obj);
   }
 
+  /**
+   * 如果过期 则清空缓存
+   * @return
+   */
   private boolean clearWhenStale() {
     if (System.currentTimeMillis() - lastClear > clearInterval) {
       clear();

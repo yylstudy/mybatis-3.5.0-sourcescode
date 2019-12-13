@@ -66,6 +66,9 @@ public class DynamicSqlSource implements SqlSource {
     SqlSource sqlSource = sqlSourceParser.parse(context.getSql(), parameterType, context.getBindings());
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
     for (Map.Entry<String, Object> entry : context.getBindings().entrySet()) {
+      //将   _parameter->参数对象本身（参数名和参数值的映射关系，Map<String,Object>，
+      //   * 若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身）
+      //   * _databaseId-> 全局配置的databaseId  添加到参数的MetaObject
       boundSql.setAdditionalParameter(entry.getKey(), entry.getValue());
     }
     return boundSql;

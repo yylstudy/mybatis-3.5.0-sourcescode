@@ -45,9 +45,9 @@ import org.apache.ibatis.reflection.property.PropertyNamer;
 public class Reflector {
   /**反射器的class类型*/
   private final Class<?> type;
-  /**可读的get方法和属性名的数组*/
+  /**get方法的属性名数组*/
   private final String[] readablePropertyNames;
-  /**可写的set方法和其属性名的数组*/
+  /**set方法的属性名数组*/
   private final String[] writeablePropertyNames;
   /**
    * set方法集合 属性名->MethodInvoker
@@ -63,13 +63,19 @@ public class Reflector {
    * 或者不包含set方法的属性名  属性名->属性Class
    */
   private final Map<String, Class<?>> setTypes = new HashMap<>();
-  /**get方法返回类型*/
+  /**属性名和get方法返回类型的映射*/
   private final Map<String, Class<?>> getTypes = new HashMap<>();
   /**构造函数数组*/
   private Constructor<?> defaultConstructor;
-  /**get和set方法以及吴getset方法属性名 的大写和属性名的映射集合*/
-  private Map<String, String> caseInsensitivePropertyMap = new HashMap<>();//大小写属性、方法不敏感的属性Map
-  //构造Class属性对应的Reflector
+  /**get和set方法以及吴getset方法属性名 的大写和属性名的映射集合
+   * 大小写属性、方法不敏感的属性Map
+   * */
+  private Map<String, String> caseInsensitivePropertyMap = new HashMap<>();
+
+  /**
+   * 构造Class属性对应的Reflector
+   * @param clazz
+   */
   public Reflector(Class<?> clazz) {
     type = clazz;
     addDefaultConstructor(clazz);
@@ -111,6 +117,7 @@ public class Reflector {
    * @param cls
    */
   private void addGetMethods(Class<?> cls) {
+    //属性名和方法集合的映射
     Map<String, List<Method>> conflictingGetters = new HashMap<>();
     //获取class的所有方法
     Method[] methods = getClassMethods(cls);
@@ -119,6 +126,7 @@ public class Reflector {
         continue;
       }
       String name = method.getName();
+      //get方法
       if ((name.startsWith("get") && name.length() > 3)
           || (name.startsWith("is") && name.length() > 2)) {
         //获取get方法 属性值
@@ -127,7 +135,7 @@ public class Reflector {
         addMethodConflict(conflictingGetters, name, method);
       }
     }
-    //解决方法冲突
+    //解决方法冲突，因为上面的一个方法名可能对应多个方法（继承或者接口的情况下）
     resolveGetterConflicts(conflictingGetters);
   }
 
@@ -146,8 +154,9 @@ public class Reflector {
     for (Entry<String, List<Method>> entry : conflictingGetters.entrySet()) {
       //接口上一个方法
       Method winner = null;
+      //属性名
       String propName = entry.getKey();
-      //candidate 接口当前方法
+      //方法集合
       for (Method candidate : entry.getValue()) {
         if (winner == null) {
           winner = candidate;
@@ -157,9 +166,9 @@ public class Reflector {
         Class<?> winnerType = winner.getReturnType();
         /**当前方法的返回类型*/
         Class<?> candidateType = candidate.getReturnType();
-        //两个方法返回类型一样
+        //两个方法返回类型一样，那么只可能是返回类型为boolean的 可能其get方法 会不一样 get or is
         if (candidateType.equals(winnerType)) {
-          //返回类型不是boolean类型， 抛出异常
+          //返回类型不是boolean类型， 抛出异常，这里是排除boolean的属性
           if (!boolean.class.equals(candidateType)) {
             throw new ReflectionException(
                 "Illegal overloaded getter method with ambiguous type for property "
@@ -167,15 +176,16 @@ public class Reflector {
                     + ". This breaks the JavaBeans specification and can cause unpredictable results.");
 
           }
-          /**是boolean类型并且方法名是以is开头，淘汰上一个方法*/
+          /**保留is开头的boolean类型的get方法*/
           else if (candidate.getName().startsWith("is")) {
             winner = candidate;
           }
         }
-        /**抛弃类型大的方法*/
         else if (candidateType.isAssignableFrom(winnerType)) {
 
-        } else if (winnerType.isAssignableFrom(candidateType)) {
+        }
+        //保留类型小的方法
+        else if (winnerType.isAssignableFrom(candidateType)) {
           winner = candidate;
         } else {
           throw new ReflectionException(
@@ -184,18 +194,20 @@ public class Reflector {
                   + ". This breaks the JavaBeans specification and can cause unpredictable results.");
         }
       }
+      //添加get方法
       addGetMethod(propName, winner);
     }
   }
 
   /**
    * 添加get方法进缓存
-   * @param name
-   * @param method
+   * @param name 属性名
+   * @param method 属性对应的get方法
    */
   private void addGetMethod(String name, Method method) {
     if (isValidPropertyName(name)) {
       getMethods.put(name, new MethodInvoker(method));
+      //获取返回类型
       Type returnType = TypeParameterResolver.resolveReturnType(method, type);
       getTypes.put(name, typeToClass(returnType));
     }
@@ -276,7 +288,7 @@ public class Reflector {
     }
     Class<?> paramType1 = setter1.getParameterTypes()[0];
     Class<?> paramType2 = setter2.getParameterTypes()[0];
-    /**上一个方法的参数类型是当前方法参数类型的父类或者接口，那么返回当前接口*/
+    //选择参数类型范围小的方法
     if (paramType1.isAssignableFrom(paramType2)) {
       return setter2;
     } else if (paramType2.isAssignableFrom(paramType1)) {
@@ -403,9 +415,7 @@ public class Reflector {
     Map<String, Method> uniqueMethods = new HashMap<>();
     Class<?> currentClass = cls;
     while (currentClass != null && currentClass != Object.class) {
-      /**
-       * 将cls的符合要求的方法添加进uniqueMethods 这个Map中
-       */
+      //将cls的符合要求的方法添加进uniqueMethods 这个Map中
       addUniqueMethods(uniqueMethods, currentClass.getDeclaredMethods());
       // we also need to look for interface methods -
       // because the class may be abstract
@@ -422,7 +432,12 @@ public class Reflector {
 
     return methods.toArray(new Method[methods.size()]);
   }
-  //将方法添加进Map中
+
+  /**
+   * 将方法添加进Map中
+   * @param uniqueMethods
+   * @param methods
+   */
   private void addUniqueMethods(Map<String, Method> uniqueMethods, Method[] methods) {
     for (Method currentMethod : methods) {
       /**
@@ -431,7 +446,7 @@ public class Reflector {
        *  这里是过滤掉桥接方法，只选择实际的方法
        */
       if (!currentMethod.isBridge()) {
-        //创建方法标识
+        //获取方法的为标识
         String signature = getSignature(currentMethod);
         // check to see if the method is already known
         // if it is known, then an extended class must have

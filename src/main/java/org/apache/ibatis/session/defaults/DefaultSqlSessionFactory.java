@@ -42,7 +42,11 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
   public DefaultSqlSessionFactory(Configuration configuration) {
     this.configuration = configuration;
   }
-  /**开启一个OpenSession*/
+
+  /**
+   * 创建一个SqlSession
+   * @return
+   */
   @Override
   public SqlSession openSession() {
     return openSessionFromDataSource(configuration.getDefaultExecutorType(), null, false);
@@ -99,7 +103,7 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
     Transaction tx = null;
     try {
       final Environment environment = configuration.getEnvironment();
-      /**创建事务工厂，默认是ManagedTransactionFactory，常用的有JdbcTransactionFactory*/
+      //创建事务工厂，默认是ManagedTransactionFactory，常用的有JdbcTransactionFactory
       final TransactionFactory transactionFactory = getTransactionFactoryFromEnvironment(environment);
       //创建一个事务JdbcTransaction（如果结合spring的话，那么上面的事务工厂实现类是SpringManagedTransactionFactory
       //SpringManagedTransactionFactory重写了newTransaction()方法，）

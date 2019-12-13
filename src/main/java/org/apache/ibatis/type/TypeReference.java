@@ -29,12 +29,23 @@ public abstract class TypeReference<T> {
 
   private final Type rawType;
 
+  /**
+   * 默认无参构造，这个会在自定义TypeHandler的时候去推断JavaType
+   */
   protected TypeReference() {
+    //推断TypeHandler的JavaType，getClass是子类的类型
     rawType = getSuperclassTypeParameter(getClass());
   }
 
+  /**
+   * 推断TypeHandler的JavaType
+   * @param clazz
+   * @return
+   */
   Type getSuperclassTypeParameter(Class<?> clazz) {
+    //获取父类的泛型Type
     Type genericSuperclass = clazz.getGenericSuperclass();
+    //不存在泛型（自定义TypeHandler未指明BaseypeHandler的泛型）
     if (genericSuperclass instanceof Class) {
       // try to climb up the hierarchy until meet something useful
       if (TypeReference.class != genericSuperclass) {
@@ -44,13 +55,12 @@ public abstract class TypeReference<T> {
       throw new TypeException("'" + getClass() + "' extends TypeReference but misses the type parameter. "
         + "Remove the extension or add a type parameter to it.");
     }
-
+    //否则获取父类的泛型对象
     Type rawType = ((ParameterizedType) genericSuperclass).getActualTypeArguments()[0];
-    // TODO remove this when Reflector is fixed to return Types
+    //如果泛型对象还是ParameterizedType，就获取本身的类型，直接返回此类型
     if (rawType instanceof ParameterizedType) {
       rawType = ((ParameterizedType) rawType).getRawType();
     }
-
     return rawType;
   }
 

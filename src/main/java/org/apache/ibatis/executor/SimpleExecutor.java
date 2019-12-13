@@ -56,7 +56,7 @@ public class SimpleExecutor extends BaseExecutor {
       Configuration configuration = ms.getConfiguration();
       //创建一个RoutingStatementHandler，这是SqlSession下的四大对象之一，用于获取statement
       StatementHandler handler = configuration.newStatementHandler(this, ms, parameter, RowBounds.DEFAULT, null, null);
-      /**获取一个Statement*/
+      //创建一个statement，常用的有PreparedStatement
       stmt = prepareStatement(handler, ms.getStatementLog());
       return handler.update(stmt);
     } finally {
@@ -112,11 +112,11 @@ public class SimpleExecutor extends BaseExecutor {
    */
   private Statement prepareStatement(StatementHandler handler, Log statementLog) throws SQLException {
     Statement stmt;
-    /**获取一个connection*/
+    //获取一个connection
     Connection connection = getConnection(statementLog);
     //获取Statement对象
     stmt = handler.prepare(connection, transaction.getTimeout());
-    /**参数初始化，这里就是使用到创建StatementHandler时创建的ParameterHandler*/
+    //参数初始化，这里就是使用到创建StatementHandler时创建的ParameterHandler
     handler.parameterize(stmt);
     return stmt;
   }
