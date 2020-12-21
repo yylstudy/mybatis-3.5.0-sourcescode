@@ -84,7 +84,7 @@ public class ParamNameResolver {
       if (name == null) {
         // @Param was not specified.
         if (config.isUseActualParamName()) {
-          //获取参数名称
+          //获取参数名称，这个需要jdk1.8并且开启字符名称显示
           name = getActualParamName(method, paramIndex);
         }
         //若参数名称为空，直接返回map长度作为xml中的参数名
@@ -147,7 +147,7 @@ public class ParamNameResolver {
       //参数不存在@Param注解，并且参数个数为1
       return args[names.firstKey()];
     } else {
-      /**参数名称和参数值的集合*/
+      //参数名称和参数值的集合
       final Map<String, Object> param = new ParamMap<>();
       int i = 0;
       for (Map.Entry<Integer, String> entry : names.entrySet()) {

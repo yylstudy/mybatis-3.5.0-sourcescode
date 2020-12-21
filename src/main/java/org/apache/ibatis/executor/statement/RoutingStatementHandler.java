@@ -46,7 +46,7 @@ public class RoutingStatementHandler implements StatementHandler {
    *
    * @param executor
    * @param ms
-   * @param parameter 参数名和参数值的映射关系，Map<String,Object>，
+   * @param parameter 参数名和参数值的映射关系，ParamMap<String,Object>，
    *      *                  若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身
    * @param rowBounds
    * @param resultHandler

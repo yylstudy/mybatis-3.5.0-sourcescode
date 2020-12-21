@@ -109,7 +109,7 @@ public class XMLScriptBuilder extends BaseBuilder {
           contents.add(new StaticTextSqlNode(data));
         }
       }
-      /**如果包含动态标签，则在动态标签库中寻找*/
+      //如果包含动态标签，则在动态标签库中寻找
       else if (child.getNode().getNodeType() == Node.ELEMENT_NODE) { // issue #628
         String nodeName = child.getNode().getNodeName();
         NodeHandler handler = nodeHandlerMap.get(nodeName);

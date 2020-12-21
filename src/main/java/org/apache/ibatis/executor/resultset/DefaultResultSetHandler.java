@@ -626,7 +626,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     List<UnMappedColumnAutoMapping> autoMapping = autoMappingsCache.get(mapKey);
     if (autoMapping == null) {
       autoMapping = new ArrayList<>();
-      //获取当前ResultSet对象中和ResultMap定义的字段不匹配的列名
+      //resultSet中不存在于ResultMap中的列名集合
       final List<String> unmappedColumnNames = rsw.getUnmappedColumnNames(resultMap, columnPrefix);
       //存在不匹配的列名
       for (String columnName : unmappedColumnNames) {
@@ -640,7 +640,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
             continue;
           }
         }
-        //尝试直接从创建出来的bean对象中查找此次列名
+        //尝试直接从创建出来的bean对象中查找此此列名
         final String property = metaObject.findProperty(propertyName, configuration.isMapUnderscoreToCamelCase());
         if (property != null && metaObject.hasSetter(property)) {
           //不存在与resultMap中的属性
@@ -648,7 +648,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
             continue;
           }
           final Class<?> propertyType = metaObject.getSetterType(property);
-          //存在TypeHandler，mybatis中有默认的TypeHandler
+          //存在TypeHandler，mybatis中有默认的TypeHandler，不匹配的一般都有默认的TypeHandler
           if (typeHandlerRegistry.hasTypeHandler(propertyType, rsw.getJdbcType(columnName))) {
             final TypeHandler<?> typeHandler = rsw.getTypeHandler(propertyType, columnName);
             autoMapping.add(new UnMappedColumnAutoMapping(columnName, property, typeHandler, propertyType.isPrimitive()));
@@ -676,7 +676,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
    * @throws SQLException
    */
   private boolean applyAutomaticMappings(ResultSetWrapper rsw, ResultMap resultMap, MetaObject metaObject, String columnPrefix) throws SQLException {
-    //获取ResultSet中不存在ResultMap的字段
+    //获取ResultSet中不存在ResultMap的字段，这个常见的是ResultType为Map的查询
     List<UnMappedColumnAutoMapping> autoMapping = createAutomaticMappings(rsw, resultMap, metaObject, columnPrefix);
     boolean foundValues = false;
     if (!autoMapping.isEmpty()) {
@@ -687,6 +687,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
         }
         if (value != null || (configuration.isCallSettersOnNulls() && !mapping.primitive)) {
           // gcode issue #377, call setter on nulls (value is not 'found')
+          //赋值
           metaObject.setValue(mapping.property, value);
         }
       }
@@ -1266,6 +1267,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
           }
           //创建rowKey
           final CacheKey rowKey = createRowKey(nestedResultMap, rsw, columnPrefix);
+          //合并当前ResultMap和其父ResultMap的rowKey
           final CacheKey combinedKey = combineKeys(rowKey, parentRowKey);
           //从缓存中获取，nestedResultObjects这个是在解析构造器的时候已经解析过了
           Object rowValue = nestedResultObjects.get(combinedKey);
@@ -1348,6 +1350,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
         createRowKeyForUnmappedProperties(resultMap, rsw, cacheKey, columnPrefix);
       }
     } else {
+      //创建rowKey，简单的说就是取<id>标签或者非<association>、非<collection>的resultMapping的列名和列值
       createRowKeyForMappedProperties(resultMap, rsw, cacheKey, resultMappings, columnPrefix);
     }
     if (cacheKey.getUpdateCount() < 2) {
@@ -1389,12 +1392,13 @@ public class DefaultResultSetHandler implements ResultSetHandler {
    */
   private void createRowKeyForMappedProperties(ResultMap resultMap, ResultSetWrapper rsw, CacheKey cacheKey, List<ResultMapping> resultMappings, String columnPrefix) throws SQLException {
     for (ResultMapping resultMapping : resultMappings) {
-      //当前映射的行是嵌套查询的行也就是不是<association>或者<collection>
+      //当前映射的行是嵌套查询的行也就是<association>或者<collection>
       if (resultMapping.getNestedResultMapId() != null && resultMapping.getResultSet() == null) {
         // Issue #392
         //那么从configuration中获取这个resultMapping中包含的resultMap
         final ResultMap nestedResultMap = configuration.getResultMap(resultMapping.getNestedResultMapId());
-        //递归调用创建行key
+        //递归调用创建行key，注意这里递归传入的是ConstructorResultMapping，所以默认情况下rowKey取的是
+        //非<association>、非<collection>的resultMapping
         createRowKeyForMappedProperties(nestedResultMap, rsw, cacheKey, nestedResultMap.getConstructorResultMappings(),
             prependPrefix(resultMapping.getColumnPrefix(), columnPrefix));
         //association、collection的select 元素的值，就说明这个resultMapping是简单的列，没有级联查询的属性什么的

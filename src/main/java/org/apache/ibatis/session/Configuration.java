@@ -592,7 +592,9 @@ public class Configuration {
   /**
    * 创建一个,MetaObject对象，这是mybatis提供的底层写法，这是环境中，我们可能使用到更多的是
    * mybatis为我们提供的另一个方法
-   * SystemMetaObject.forObject(Object obj);
+   * SystemMetaObject.forObject(Object obj); 这两个方法的区别是，Configuration的newMetaObject()方法中的
+   * 参数objectFactory、objectWrapperFactory、reflectorFactory这几个参数都是使用的Configuration，所以会受mybatis-config.xml中的
+   * 配置影响，而SystemMetaObject.forObject(Object obj) 那三个参数使用的永远是默认的，所以并不会受mybatis-config.xml影响
    * 这个方法主要用于包装对象
    * 该MeatObject还有两个方法，getValue(String name); 是获取属性的值 支持OGNL表达式
    * setValue(String name,Object obj) 方法用于修改属性值 支持OGNL表达式
@@ -675,7 +677,7 @@ public class Configuration {
       //创建一个SIMPLE的执行器
       executor = new SimpleExecutor(this, transaction);
     }
-    //若是开启缓存
+    //若是开启二级缓存
     if (cacheEnabled) {
       //缓存执行器装饰类
       executor = new CachingExecutor(executor);

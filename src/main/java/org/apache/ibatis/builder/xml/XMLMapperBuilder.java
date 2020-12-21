@@ -109,19 +109,19 @@ public class XMLMapperBuilder extends BaseBuilder {
    * 解析mapper资源文件
    */
   public void parse() {
-    /**判断是否已经解析过了*/
+    //判断是否已经解析过了
     if (!configuration.isResourceLoaded(resource)) {
-      /**解析mapper元素*/
+      //解析mapper元素
       configurationElement(parser.evalNode("/mapper"));
       configuration.addLoadedResource(resource);
       //根据namespace构建Mapper
       bindMapperForNamespace();
     }
-    /**解析之前因异常解析未完成的ResultMap*/
+    //解析之前因异常解析未完成的ResultMap
     parsePendingResultMaps();
-    /**解析之前因异常解析未完成的cacheRef*/
+    //解析之前因异常解析未完成的cacheRef
     parsePendingCacheRefs();
-    /**解析之前因异常解析未完成的Statements*/
+    //解析之前因异常解析未完成的Statements
     parsePendingStatements();
   }
 
@@ -377,7 +377,7 @@ public class XMLMapperBuilder extends BaseBuilder {
         resultMappings.add(buildResultMappingFromContext(resultChild, typeClass, flags));
       }
     }
-    /**构建resultMap解析器*/
+    //构建resultMap解析器
     ResultMapResolver resultMapResolver = new ResultMapResolver(builderAssistant, id, typeClass, extend, discriminator, resultMappings, autoMapping);
     try {
       return resultMapResolver.resolve();
@@ -558,7 +558,7 @@ public class XMLMapperBuilder extends BaseBuilder {
         //ignore, bound type is not required
       }
       if (boundType != null) {
-        /**该Mapper未注册到Configuration*/
+        //该Mapper未注册到Configuration
         if (!configuration.hasMapper(boundType)) {
           // Spring may not know the real resource name so we set a flag
           // to prevent loading again this resource from the mapper interface

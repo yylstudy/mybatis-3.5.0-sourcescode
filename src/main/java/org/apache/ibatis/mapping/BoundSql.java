@@ -38,9 +38,10 @@ public class BoundSql {
   private final String sql;
   /**解析完成的parameterMapping*/
   private final List<ParameterMapping> parameterMappings;
-  /**参数名和参数值的映射关系，Map<String,Object>，如果只有一个参数，就是参数值本身*/
+  /**参数名和参数值的映射关系，ParamMap<String,Object>，如果只有一个参数，就是参数值本身*/
   private final Object parameterObject;
-  /**默认是空的参数构造*/
+  /**默认是空的参数构造，如果是StaticSqlSource，那么这个为空的HashMap，如果是DynamicSqlSource 那么这个是有值的
+   * 具体可看setAdditionalParameter*/
   private final Map<String, Object> additionalParameters;
   /**Map的MetaObject*/
   private final MetaObject metaParameters;

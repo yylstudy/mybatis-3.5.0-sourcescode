@@ -51,9 +51,9 @@ public class ResultSetWrapper {
   /**sql语句中字段的JdbcType*/
   private final List<JdbcType> jdbcTypes = new ArrayList<>();
   private final Map<String, Map<Class<?>, TypeHandler<?>>> typeHandlerMap = new HashMap<>();
-  /**存放<resultMap>中列名能和resultSet对应上的字段 列名大写    映射关系是 resultMapId ->> 能对应上的列名集合*/
+  /**ResultSet中存在于ResultMap中的列名集合*/
   private final Map<String, List<String>> mappedColumnNamesMap = new HashMap<>();
-  /**存放<resultMap>中列名不能和resultSet对应上的字段 还是原来的列名   映射关系是 resultMapId ->> 不能对应上的列名集合*/
+  /**resultSet中不存在于ResultMap中的列名集合*/
   private final Map<String, List<String>> unMappedColumnNamesMap = new HashMap<>();
 
   /**
@@ -195,7 +195,7 @@ public class ResultSetWrapper {
   }
 
   /**
-   * 获取 ResultSet对象中和<ResultMap>定义的字段的字段匹配不上的列明
+   * 获取 ResultSet对象中和<ResultMap>定义的字段的字段匹配不上的列名
    * @param resultMap
    * @param columnPrefix
    * @return

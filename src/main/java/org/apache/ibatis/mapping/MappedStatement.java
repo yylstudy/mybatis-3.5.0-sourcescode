@@ -52,7 +52,7 @@ public final class MappedStatement {
   private ResultSetType resultSetType;
   /**
    * source对象，其中包含了sql的Node对象，可以根据getBoundSql获取要执行的sql语句
-   * 常用的有DynamicSqlSource 和StaticSqlSource
+   * 常用的有DynamicSqlSource 和RawSqlSource
    */
   private SqlSource sqlSource;
   /**当前整个Mapper的缓存对象，这个是二级缓存*/
@@ -74,7 +74,7 @@ public final class MappedStatement {
   /**selectKey映射到参数的属性字段名*/
   private String[] keyProperties;
   private String[] keyColumns;
-  //association、collection的是否包含resultMap
+  //association、collection的是否包含resultMap并且不包含 select
   private boolean hasNestedResultMaps;
   //databaseId
   private String databaseId;

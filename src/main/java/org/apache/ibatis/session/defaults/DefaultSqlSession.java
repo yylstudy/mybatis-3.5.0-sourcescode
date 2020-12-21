@@ -49,7 +49,7 @@ import org.apache.ibatis.session.SqlSession;
 public class DefaultSqlSession implements SqlSession {
     //全局配置类
     private final Configuration configuration;
-    /**执行器*/
+    /**执行器 CachingExecutor*/
     private final Executor executor;
     /**是否自动提交*/
     private final boolean autoCommit;
@@ -200,7 +200,7 @@ public class DefaultSqlSession implements SqlSession {
     /**
      * update处理
      * @param statement MappedStatement的id，用于获取MappedStatement
-     * @param parameter 参数名和参数值的映射关系，Map<String,Object>，
+     * @param parameter 参数名和参数值的映射关系，ParamMap<String,Object>，
      *                  若参数只有一个且没有@Param注解，那么这个parameter就是第一个参数本身
      *
      * @return

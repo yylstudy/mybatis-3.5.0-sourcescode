@@ -45,7 +45,7 @@ public class SimpleExecutor extends BaseExecutor {
    * @param ms
    * @param parameter 参数名和参数值的映射关系，Map<String,Object>，
    *                  若参数只有一个且没有@Param注解，那么这个parameter
-   *                  就是第一个参数本身，否则就是参数名称和参数值的Map结构
+   *                  就是第一个参数本身，否则就是参数名称和参数值的ParamMap结构
    * @return
    * @throws SQLException
    */

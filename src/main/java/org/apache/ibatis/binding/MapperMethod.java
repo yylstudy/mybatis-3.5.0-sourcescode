@@ -66,7 +66,7 @@ public class MapperMethod {
       //insert 语句
       case INSERT: {
         //参数名和参数值的映射关系，Map<String,Object>，若参数只有一个且没有@Param注解，那么这个
-        //     param就是第一个参数本身，否则就是参数名和参数值的Map结构
+        //     param就是第一个参数本身，否则就是参数名和参数值的ParamMap结构
     	Object param = method.convertArgsToSqlCommandParam(args);
         result = rowCountResult(sqlSession.insert(command.getName(), param));
         break;
@@ -439,7 +439,7 @@ public class MapperMethod {
 
     private String getMapKey(Method method) {
       String mapKey = null;
-      /**若方法的返回类型是Map或者其子类*/
+      //若方法的返回类型是Map或者其子类
       if (Map.class.isAssignableFrom(method.getReturnType())) {
         //获取方法上@MapKey的值返回
         final MapKey mapKeyAnnotation = method.getAnnotation(MapKey.class);

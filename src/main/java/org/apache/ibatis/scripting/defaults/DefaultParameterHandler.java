@@ -80,6 +80,7 @@ public class DefaultParameterHandler implements ParameterHandler {
           Object value;
           //获取要注入参数的key
           String propertyName = parameterMapping.getProperty();
+          //mybatis动态标签的情况下，走这个逻辑分支
           if (boundSql.hasAdditionalParameter(propertyName)) {
             value = boundSql.getAdditionalParameter(propertyName);
           } else if (parameterObject == null) {

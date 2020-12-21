@@ -52,7 +52,7 @@ public abstract class BaseExecutor implements Executor {
   private static final Log log = LogFactory.getLog(BaseExecutor.class);
   /**事务对象JdbcTransaction（引入spring的话，就是SpringManagedTransaction）*/
   protected Transaction transaction;
-  /**CacheExecutor*/
+  /**CachingExecutor*/
   protected Executor wrapper;
 
   protected ConcurrentLinkedQueue<DeferredLoad> deferredLoads;
